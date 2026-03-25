@@ -23,18 +23,62 @@ class UserController extends BaseController {
         $this->activityLog = new ActivityLog();
     }
 
-    // List all users - NO LOGGING for viewing
-    public function index() {
-        $user = new User();
-        $users = $user->getAllUsers();
-        
-        $data = [
-            'users' => $users,
-            'title' => 'User Management'
-        ];
-        
-        $this->render('user/index.php', $data);
+    // List all users with pagination and filtering
+public function index() {
+    // Pagination settings
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+    $offset = ($page - 1) * $limit;
+    
+    // Sorting settings
+    $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'id';
+    $sort_order = isset($_GET['order']) && in_array($_GET['order'], ['ASC', 'DESC']) ? $_GET['order'] : 'DESC';
+    
+    // Build filters from GET parameters
+    $filters = [];
+    if(!empty($_GET['search'])) {
+        $filters['search'] = $_GET['search'];
     }
+    if(!empty($_GET['role'])) {
+        $filters['role'] = $_GET['role'];
+    }
+    if(!empty($_GET['status'])) {
+        $filters['status'] = $_GET['status'];
+    }
+    if(!empty($_GET['date_from'])) {
+        $filters['date_from'] = $_GET['date_from'];
+    }
+    if(!empty($_GET['date_to'])) {
+        $filters['date_to'] = $_GET['date_to'];
+    }
+    
+    $user = new User();
+    $users = $user->getAllUsersPaginated($limit, $offset, $filters, $sort_by, $sort_order);
+    $totalUsers = $user->countUsers($filters);
+    $totalPages = ceil($totalUsers / $limit);
+    
+    // Get statistics
+    $admin_count = $user->countByRole('admin');
+    $uploader_count = $user->countByRole('uploader');
+    $active_users = $user->countByStatus(1);
+    
+    $data = [
+        'users' => $users,
+        'current_page' => $page,
+        'total_pages' => $totalPages,
+        'total_users' => $totalUsers,
+        'limit' => $limit,
+        'filters' => $filters,
+        'sort_by' => $sort_by,
+        'sort_order' => $sort_order,
+        'admin_count' => $admin_count,
+        'uploader_count' => $uploader_count,
+        'active_users' => $active_users,
+        'title' => 'User Management'
+    ];
+    
+    $this->render('user/index.php', $data);
+}
 
     // View single user - NO LOGGING for viewing
     public function view() {

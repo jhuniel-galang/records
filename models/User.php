@@ -197,13 +197,142 @@ class User {
     }
 
     // Count users by role
-    public function countByRole($role) {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE role = :role";
+public function countByRole($role) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE role = :role AND status = 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':role', $role);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row['total'];
+    } catch (PDOException $e) {
+        error_log("User countByRole Error: " . $e->getMessage());
+        return 0;
     }
+}
+
+
+    // Get all users with pagination and filtering
+public function getAllUsersPaginated($limit, $offset, $filters = [], $sort_by = 'id', $sort_order = 'DESC') {
+    try {
+        $query = "SELECT * FROM " . $this->table . " WHERE 1=1";
+        $params = [];
+        
+        // Apply filters
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (name LIKE :search OR username LIKE :search OR email LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['role'])) {
+            $query .= " AND role = :role";
+            $params[':role'] = $filters['role'];
+        }
+        
+        if(isset($filters['status']) && $filters['status'] !== '') {
+            $query .= " AND status = :status";
+            $params[':status'] = $filters['status'];
+        }
+        
+        if(!empty($filters['date_from'])) {
+            $query .= " AND DATE(created_at) >= :date_from";
+            $params[':date_from'] = $filters['date_from'];
+        }
+        
+        if(!empty($filters['date_to'])) {
+            $query .= " AND DATE(created_at) <= :date_to";
+            $params[':date_to'] = $filters['date_to'];
+        }
+        
+        // Allowed sort columns
+        $allowed_sort = ['id', 'name', 'username', 'role', 'status', 'created_at'];
+        $sort_by = in_array($sort_by, $allowed_sort) ? $sort_by : 'id';
+        $sort_order = $sort_order == 'ASC' ? 'ASC' : 'DESC';
+        
+        $query .= " ORDER BY " . $sort_by . " " . $sort_order . " LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind parameters
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (PDOException $e) {
+        error_log("User getAllUsersPaginated Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Count total users with filters
+public function countUsers($filters = []) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE 1=1";
+        $params = [];
+        
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (name LIKE :search OR username LIKE :search OR email LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['role'])) {
+            $query .= " AND role = :role";
+            $params[':role'] = $filters['role'];
+        }
+        
+        if(isset($filters['status']) && $filters['status'] !== '') {
+            $query .= " AND status = :status";
+            $params[':status'] = $filters['status'];
+        }
+        
+        if(!empty($filters['date_from'])) {
+            $query .= " AND DATE(created_at) >= :date_from";
+            $params[':date_from'] = $filters['date_from'];
+        }
+        
+        if(!empty($filters['date_to'])) {
+            $query .= " AND DATE(created_at) <= :date_to";
+            $params[':date_to'] = $filters['date_to'];
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'];
+        
+    } catch (PDOException $e) {
+        error_log("User countUsers Error: " . $e->getMessage());
+        return 0;
+    }
+}
+
+
+// Count users by status
+public function countByStatus($status) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE status = :status";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':status', $status);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'];
+    } catch (PDOException $e) {
+        error_log("User countByStatus Error: " . $e->getMessage());
+        return 0;
+    }
+}
 }
 ?>
