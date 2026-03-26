@@ -19,34 +19,70 @@ if (!class_exists('SchoolController')) {
             $this->activityLog = new ActivityLog();
         }
 
-        // List all schools
-        public function index() {
-            $school = new School();
-            $schools = $school->getAllSchools();
-            
-            // Get statistics
-            $stats = $school->countByLevel();
-            $elementaryCount = 0;
-            $hsCount = 0;
-            
-            foreach ($stats as $stat) {
-                if ($stat['level'] == 'Elementary') {
-                    $elementaryCount = $stat['total'];
-                } else if ($stat['level'] == 'HS') {
-                    $hsCount = $stat['total'];
-                }
-            }
-            
-            $data = [
-                'schools' => $schools,
-                'elementary_count' => $elementaryCount,
-                'hs_count' => $hsCount,
-                'total_schools' => count($schools),
-                'title' => 'School Management'
-            ];
-            
-            $this->render('school/index.php', $data);
+        // List all schools with pagination and filtering
+public function index() {
+    // Pagination settings
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+    $offset = ($page - 1) * $limit;
+    
+    // Sorting settings
+    $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'school_name';
+    $sort_order = isset($_GET['order']) && in_array($_GET['order'], ['ASC', 'DESC']) ? $_GET['order'] : 'ASC';
+    
+    // Build filters from GET parameters
+    $filters = [];
+    if(!empty($_GET['search'])) {
+        $filters['search'] = $_GET['search'];
+    }
+    if(!empty($_GET['level'])) {
+        $filters['level'] = $_GET['level'];
+    }
+    if(isset($_GET['status']) && $_GET['status'] !== '') {
+        $filters['status'] = $_GET['status'];
+    }
+    if(!empty($_GET['created_by'])) {
+        $filters['created_by'] = $_GET['created_by'];
+    }
+    
+    $school = new School();
+    $schools = $school->getAllSchoolsPaginated($limit, $offset, $filters, $sort_by, $sort_order);
+    $totalSchools = $school->countSchools($filters);
+    $totalPages = ceil($totalSchools / $limit);
+    
+    // Get statistics
+    $stats = $school->countByLevel();
+    $elementaryCount = 0;
+    $hsCount = 0;
+    
+    foreach ($stats as $stat) {
+        if ($stat['level'] == 'Elementary') {
+            $elementaryCount = $stat['total'];
+        } else if ($stat['level'] == 'HS') {
+            $hsCount = $stat['total'];
         }
+    }
+    
+    // Get all creators for filter dropdown
+    $creators = $school->getAllCreators();
+    
+    $data = [
+        'schools' => $schools,
+        'elementary_count' => $elementaryCount,
+        'hs_count' => $hsCount,
+        'total_schools' => $totalSchools,
+        'current_page' => $page,
+        'total_pages' => $totalPages,
+        'limit' => $limit,
+        'filters' => $filters,
+        'sort_by' => $sort_by,
+        'sort_order' => $sort_order,
+        'creators' => $creators,
+        'title' => 'School Management'
+    ];
+    
+    $this->render('school/index.php', $data);
+}
 
         // View single school
         public function view() {

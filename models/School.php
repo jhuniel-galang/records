@@ -218,5 +218,119 @@ class School {
             return false;
         }
     }
+
+
+    // Get all schools with pagination, filtering, and sorting
+public function getAllSchoolsPaginated($limit, $offset, $filters = [], $sort_by = 'school_name', $sort_order = 'ASC') {
+    try {
+        $query = "SELECT s.*, u.username as creator_name 
+                  FROM " . $this->table . " s
+                  LEFT JOIN users u ON s.created_by = u.id
+                  WHERE 1=1";
+        $params = [];
+        
+        // Apply filters
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (s.school_name LIKE :search OR s.address LIKE :search OR s.principal_name LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['level'])) {
+            $query .= " AND s.level = :level";
+            $params[':level'] = $filters['level'];
+        }
+        
+        if(isset($filters['status']) && $filters['status'] !== '') {
+            $query .= " AND s.status = :status";
+            $params[':status'] = $filters['status'];
+        }
+        
+        if(!empty($filters['created_by'])) {
+            $query .= " AND s.created_by = :created_by";
+            $params[':created_by'] = $filters['created_by'];
+        }
+        
+        // Allowed sort columns
+        $allowed_sort = ['id', 'school_name', 'level', 'address', 'principal_name', 'status', 'created_at'];
+        $sort_by = in_array($sort_by, $allowed_sort) ? $sort_by : 'school_name';
+        $sort_order = $sort_order == 'ASC' ? 'ASC' : 'DESC';
+        
+        $query .= " ORDER BY " . $sort_by . " " . $sort_order . " LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind parameters
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (PDOException $e) {
+        error_log("School getAllSchoolsPaginated Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Count total schools with filters
+public function countSchools($filters = []) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " s WHERE 1=1";
+        $params = [];
+        
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (s.school_name LIKE :search OR s.address LIKE :search OR s.principal_name LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['level'])) {
+            $query .= " AND s.level = :level";
+            $params[':level'] = $filters['level'];
+        }
+        
+        if(isset($filters['status']) && $filters['status'] !== '') {
+            $query .= " AND s.status = :status";
+            $params[':status'] = $filters['status'];
+        }
+        
+        if(!empty($filters['created_by'])) {
+            $query .= " AND s.created_by = :created_by";
+            $params[':created_by'] = $filters['created_by'];
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'];
+        
+    } catch (PDOException $e) {
+        error_log("School countSchools Error: " . $e->getMessage());
+        return 0;
+    }
+}
+
+// Get all users for filter (creators)
+public function getAllCreators() {
+    try {
+        $query = "SELECT id, username FROM users ORDER BY username";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("School getAllCreators Error: " . $e->getMessage());
+        return [];
+    }
+}
 }
 ?>
