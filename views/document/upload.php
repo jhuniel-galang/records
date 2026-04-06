@@ -11,6 +11,11 @@
                     <input type="file" class="form-control" id="document" name="document" required>
                     <small class="text-muted">Allowed types: PDF, Images (JPG, PNG, GIF), DOC, DOCX, XLS, XLSX. Max size: 10MB</small>
                 </div>
+                <!-- Add this near the file input field -->
+<div id="duplicate-warning" class="alert alert-warning" style="display: none;">
+    <i class="bi bi-exclamation-triangle"></i> 
+    <span id="duplicate-message"></span>
+</div>
                 
                 <div class="col-md-6 mb-3">
                     <label for="doc_title" class="form-label">Document Title *</label>
@@ -61,7 +66,50 @@
                     <button type="submit" class="btn btn-primary">Upload Document</button>
                     <a href="index.php?controller=document&action=index" class="btn btn-secondary">Cancel</a>
                 </div>
+                
             </div>
         </form>
     </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+<script>
+    // Real-time duplicate title checking (optional)
+    let checkTimeout;
+    
+    document.getElementById('doc_title').addEventListener('input', function() {
+        clearTimeout(checkTimeout);
+        const doc_title = this.value;
+        const school_name = document.getElementById('school_name').value;
+        
+        if (doc_title.length > 2 && school_name) {
+            checkTimeout = setTimeout(function() {
+                fetch('index.php?controller=document&action=checkDuplicate&doc_title=' + encodeURIComponent(doc_title) + '&school_name=' + encodeURIComponent(school_name))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.duplicate) {
+                            const errorDiv = document.getElementById('title-error');
+                            if (!errorDiv) {
+                                const div = document.createElement('div');
+                                div.id = 'title-error';
+                                div.className = 'text-danger mt-1';
+                                div.innerHTML = '<small><i class="bi bi-exclamation-triangle"></i> A document with this title already exists for this school!</small>';
+                                document.getElementById('doc_title').parentNode.appendChild(div);
+                            }
+                        } else {
+                            const errorDiv = document.getElementById('title-error');
+                            if (errorDiv) errorDiv.remove();
+                        }
+                    });
+            }, 500);
+        }
+    });
+</script>

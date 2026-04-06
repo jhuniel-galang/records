@@ -67,27 +67,53 @@ public function upload() {
     $this->render('document/upload.php', $data);
 }
 
-        // Process document upload
+       // Process document upload
 public function store() {
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['document'])) {
         
         $file = $_FILES['document'];
         $school_name = $_POST['school_name'] ?? '';
-        $doc_title = $_POST['doc_title'] ?? '';
+        $doc_title = trim($_POST['doc_title'] ?? '');
         $doc_year = $_POST['doc_year'] ?? '';
         $remarks = $_POST['remarks'] ?? '';
         $document_type = $_POST['document_type'] ?? 'Other';
+        
+        // Validate required fields
+        if (empty($doc_title)) {
+            $_SESSION['error'] = 'Document title is required';
+            $this->redirect('index.php?controller=document&action=upload');
+            return;
+        }
+        
+        $document = new Document();
+        
+        // Check for duplicate document title
+        if ($document->checkDuplicateTitle($doc_title, $school_name, $doc_year)) {
+            $_SESSION['error'] = 'A document with the same title already exists for this school! Please use a different title.';
+            $this->redirect('index.php?controller=document&action=upload');
+            return;
+        }
+        
+        // Check for duplicate file name
+        $original_filename = $file['name'];
+        if ($document->checkFileDuplicate($original_filename, $school_name)) {
+            $_SESSION['error'] = 'A file with the same name already exists for this school! Please rename the file or upload a different one.';
+            $this->redirect('index.php?controller=document&action=upload');
+            return;
+        }
         
         // Validate file
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $_SESSION['error'] = 'Error uploading file';
             $this->redirect('index.php?controller=document&action=upload');
+            return;
         }
         
         // Check file size (max 10MB)
         if ($file['size'] > 10 * 1024 * 1024) {
             $_SESSION['error'] = 'File size too large. Maximum size is 10MB';
             $this->redirect('index.php?controller=document&action=upload');
+            return;
         }
         
         // Get file extension
@@ -99,6 +125,17 @@ public function store() {
         if (!in_array($file_ext, $allowed_types)) {
             $_SESSION['error'] = 'File type not allowed. Allowed types: ' . implode(', ', $allowed_types);
             $this->redirect('index.php?controller=document&action=upload');
+            return;
+        }
+        
+        // Calculate file hash for content-based duplicate checking
+        $file_hash = md5_file($file['tmp_name']);
+        
+        // Check if the exact same file content already exists
+        if ($document->checkFileHashDuplicate($file_hash)) {
+            $_SESSION['error'] = 'This exact file has already been uploaded! Please upload a different file.';
+            $this->redirect('index.php?controller=document&action=upload');
+            return;
         }
         
         // Generate unique filename
@@ -108,26 +145,27 @@ public function store() {
         // Move uploaded file
         if (move_uploaded_file($file['tmp_name'], $upload_path)) {
             
-            $document = new Document();
             $document->user_id = $_SESSION['user_id'];
             $document->school_name = $school_name;
-            $document->file_name = $file['name'];
+            $document->file_name = $original_filename;
             $document->doc_title = $doc_title;
             $document->doc_year = $doc_year;
             $document->file_path = 'uploads/' . $new_filename;
+            $document->file_hash = $file_hash;
             $document->file_type = $file_ext;
             $document->file_size = $file['size'];
             $document->remarks = $remarks;
             $document->document_type = $document_type;
             
             $newData = [
-                'file_name' => $file['name'],
+                'file_name' => $original_filename,
                 'doc_title' => $doc_title,
                 'doc_year' => $doc_year,
                 'school_name' => $school_name,
                 'document_type' => $document_type,
                 'file_size' => $file['size'],
-                'file_type' => $file_ext
+                'file_type' => $file_ext,
+                'file_hash' => $file_hash
             ];
             
             if ($document->upload()) {
@@ -158,7 +196,7 @@ public function store() {
                     $_SESSION['user_id'],
                     $_SESSION['user_username'],
                     'UPLOAD_DOCUMENT',
-                    'Uploaded document: ' . $file['name'],
+                    'Uploaded document: ' . $original_filename,
                     'DocumentController',
                     'store',
                     null,
@@ -276,11 +314,28 @@ public function edit() {
     }
 }
 
-        // Update document
+       // Update document
 public function update() {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         $document = new Document();
+        
+        // Check for duplicate document title (excluding current document)
+        $doc_title = trim($_POST['doc_title'] ?? '');
+        $school_name = $_POST['school_name'] ?? '';
+        $doc_year = $_POST['doc_year'] ?? '';
+        
+        if (empty($doc_title)) {
+            $_SESSION['error'] = 'Document title is required';
+            $this->redirect('index.php?controller=document&action=edit&id=' . $_POST['id']);
+            return;
+        }
+        
+        if ($document->checkDuplicateTitle($doc_title, $school_name, $doc_year, $_POST['id'])) {
+            $_SESSION['error'] = 'A document with the same title already exists for this school! Please use a different title.';
+            $this->redirect('index.php?controller=document&action=edit&id=' . $_POST['id']);
+            return;
+        }
         
         // First, get the document to get old data and file name
         $document->getDocumentById($_POST['id']);
@@ -296,8 +351,8 @@ public function update() {
         // Set new values
         $document->id = $_POST['id'];
         $document->school_name = $_POST['school_name'];
-        $document->doc_title = $_POST['doc_title'];
-        $document->doc_year = $_POST['doc_year'];
+        $document->doc_title = $doc_title;
+        $document->doc_year = $doc_year;
         $document->remarks = $_POST['remarks'];
         $document->document_type = $_POST['document_type'];
         
@@ -569,6 +624,21 @@ public function restoreFromArchive() {
     }
     
     $this->redirect('index.php?controller=document&action=archive');
+}
+
+
+
+// AJAX endpoint to check for duplicate title
+public function checkDuplicate() {
+    $doc_title = $_GET['doc_title'] ?? '';
+    $school_name = $_GET['school_name'] ?? '';
+    
+    $document = new Document();
+    $isDuplicate = $document->checkDuplicateTitle($doc_title, $school_name);
+    
+    header('Content-Type: application/json');
+    echo json_encode(['duplicate' => $isDuplicate]);
+    exit();
 }
 
 

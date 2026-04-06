@@ -26,40 +26,42 @@ class Document {
     }
 
     // Upload a new document
-    public function upload() {
-        try {
-            $query = "INSERT INTO " . $this->table . " 
-                      SET user_id = :user_id,
-                          school_name = :school_name,
-                          file_name = :file_name,
-                          doc_title = :doc_title,
-                          doc_year = :doc_year,
-                          file_path = :file_path,
-                          file_type = :file_type,
-                          file_size = :file_size,
-                          remarks = :remarks,
-                          document_type = :document_type,
-                          status = 1";
-            
-            $stmt = $this->conn->prepare($query);
-            
-            $stmt->bindParam(':user_id', $this->user_id);
-            $stmt->bindParam(':school_name', $this->school_name);
-            $stmt->bindParam(':file_name', $this->file_name);
-            $stmt->bindParam(':doc_title', $this->doc_title);
-            $stmt->bindParam(':doc_year', $this->doc_year);
-            $stmt->bindParam(':file_path', $this->file_path);
-            $stmt->bindParam(':file_type', $this->file_type);
-            $stmt->bindParam(':file_size', $this->file_size);
-            $stmt->bindParam(':remarks', $this->remarks);
-            $stmt->bindParam(':document_type', $this->document_type);
-            
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Document upload Error: " . $e->getMessage());
-            return false;
-        }
+public function upload() {
+    try {
+        $query = "INSERT INTO " . $this->table . " 
+                  SET user_id = :user_id,
+                      school_name = :school_name,
+                      file_name = :file_name,
+                      doc_title = :doc_title,
+                      doc_year = :doc_year,
+                      file_path = :file_path,
+                      file_hash = :file_hash,
+                      file_type = :file_type,
+                      file_size = :file_size,
+                      remarks = :remarks,
+                      document_type = :document_type,
+                      status = 1";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        $stmt->bindParam(':user_id', $this->user_id);
+        $stmt->bindParam(':school_name', $this->school_name);
+        $stmt->bindParam(':file_name', $this->file_name);
+        $stmt->bindParam(':doc_title', $this->doc_title);
+        $stmt->bindParam(':doc_year', $this->doc_year);
+        $stmt->bindParam(':file_path', $this->file_path);
+        $stmt->bindParam(':file_hash', $this->file_hash);
+        $stmt->bindParam(':file_type', $this->file_type);
+        $stmt->bindParam(':file_size', $this->file_size);
+        $stmt->bindParam(':remarks', $this->remarks);
+        $stmt->bindParam(':document_type', $this->document_type);
+        
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("Document upload Error: " . $e->getMessage());
+        return false;
     }
+}
 
     // Get all documents
     public function getAllDocuments($includeInactive = false) {
@@ -119,41 +121,42 @@ class Document {
         }
     }
 
-    // Get single document by ID
-    public function getDocumentById($id) {
-        try {
-            $query = "SELECT d.*, u.username as uploader_name 
-                      FROM " . $this->table . " d
-                      LEFT JOIN users u ON d.user_id = u.id
-                      WHERE d.id = :id LIMIT 1";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->execute();
-            
-            if($stmt->rowCount() > 0) {
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                $this->id = $row['id'];
-                $this->user_id = $row['user_id'];
-                $this->school_name = $row['school_name'];
-                $this->file_name = $row['file_name'];
-                $this->doc_title = $row['doc_title'];
-                $this->doc_year = $row['doc_year'];
-                $this->file_path = $row['file_path'];
-                $this->file_type = $row['file_type'];
-                $this->file_size = $row['file_size'];
-                $this->remarks = $row['remarks'];
-                $this->document_type = $row['document_type'];
-                $this->uploader_at = $row['uploader_at'];
-                $this->status = $row['status'];
-                return true;
-            }
-            return false;
-        } catch (PDOException $e) {
-            error_log("Document getDocumentById Error: " . $e->getMessage());
+   // Get single document by ID
+public function getDocumentById($id) {
+    try {
+        $query = "SELECT d.*, u.username as uploader_name 
+                  FROM " . $this->table . " d
+                  LEFT JOIN users u ON d.user_id = u.id
+                  WHERE d.id = :id LIMIT 1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        
+        if($stmt->rowCount() > 0) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->id = $row['id'];
+            $this->user_id = $row['user_id'];
+            $this->school_name = $row['school_name'];
+            $this->file_name = $row['file_name'];
+            $this->doc_title = $row['doc_title'];
+            $this->doc_year = $row['doc_year'];
+            $this->file_path = $row['file_path'];
+            $this->file_hash = $row['file_hash'];
+            $this->file_type = $row['file_type'];
+            $this->file_size = $row['file_size'];
+            $this->remarks = $row['remarks'];
+            $this->document_type = $row['document_type'];
+            $this->uploader_at = $row['uploader_at'];
+            $this->status = $row['status'];
+            return true;
+        }
+        return false;
+    } catch (PDOException $e) {
+        error_log("Document getDocumentById Error: " . $e->getMessage());
             return false;
         }
-    }
+}
 
    // Update document
 public function update() {
@@ -574,5 +577,105 @@ public function update() {
             return [];
         }
     }
+
+    // Check if document title already exists
+public function checkDuplicateTitle($doc_title, $school_name, $doc_year = null, $exclude_id = null) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                  WHERE doc_title = :doc_title 
+                  AND school_name = :school_name 
+                  AND status = 1";
+        $params = [
+            ':doc_title' => $doc_title,
+            ':school_name' => $school_name
+        ];
+        
+        if ($doc_year) {
+            $query .= " AND doc_year = :doc_year";
+            $params[':doc_year'] = $doc_year;
+        }
+        
+        if ($exclude_id) {
+            $query .= " AND id != :exclude_id";
+            $params[':exclude_id'] = $exclude_id;
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    } catch (PDOException $e) {
+        error_log("Document checkDuplicateTitle Error: " . $e->getMessage());
+        return false;
+    }
+}
+
+
+// Check if file already exists (by file name)
+public function checkFileDuplicate($file_name, $school_name, $exclude_id = null) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                  WHERE file_name = :file_name 
+                  AND school_name = :school_name 
+                  AND status = 1";
+        $params = [
+            ':file_name' => $file_name,
+            ':school_name' => $school_name
+        ];
+        
+        if ($exclude_id) {
+            $query .= " AND id != :exclude_id";
+            $params[':exclude_id'] = $exclude_id;
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    } catch (PDOException $e) {
+        error_log("Document checkFileDuplicate Error: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Check if file content is duplicate (by file hash)
+public function checkFileHashDuplicate($file_hash, $exclude_id = null) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                  WHERE file_hash = :file_hash 
+                  AND status = 1";
+        $params = [
+            ':file_hash' => $file_hash
+        ];
+        
+        if ($exclude_id) {
+            $query .= " AND id != :exclude_id";
+            $params[':exclude_id'] = $exclude_id;
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    } catch (PDOException $e) {
+        error_log("Document checkFileHashDuplicate Error: " . $e->getMessage());
+        return false;
+    }
+}
 }
 ?>

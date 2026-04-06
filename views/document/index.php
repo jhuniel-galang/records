@@ -42,11 +42,8 @@
         <th>ID</th>
         <th>Document Title</th>
         <th>Year</th>
-        <th>File Name</th>
         <th>School</th>
         <th>Type</th>
-        <th>Size</th>
-        <th>Uploaded By</th>
         <th>Upload Date</th>
         <th>Actions</th>
     </tr>
@@ -60,18 +57,10 @@
             <td><?php echo $doc['id']; ?></td>
             <td><strong><?php echo htmlspecialchars($doc['doc_title'] ?: 'Untitled'); ?></strong></td>
             <td><?php echo htmlspecialchars($doc['doc_year'] ?: 'N/A'); ?></td>
-            <td>
-                <?php 
-                if($doc['file_type'] == 'pdf') echo '📄';
-                elseif(in_array($doc['file_type'], ['jpg', 'jpeg', 'png', 'gif'])) echo '🖼️';
-                else echo '📁';
-                ?>
-                <?php echo htmlspecialchars($doc['file_name']); ?>
-            </td>
             <td><?php echo htmlspecialchars($doc['school_name']); ?></td>
             <td><span class="badge bg-info"><?php echo htmlspecialchars($doc['document_type']); ?></span></td>
-            <td><?php echo round($doc['file_size'] / 1024, 2); ?> KB</td>
-            <td><?php echo htmlspecialchars($doc['uploader_name'] ?? 'Unknown'); ?></td>
+
+
             <td><?php echo date('Y-m-d H:i', strtotime($doc['uploader_at'])); ?></td>
             <td>
                 <a href="index.php?controller=document&action=view&id=<?php echo $doc['id']; ?>" class="btn btn-sm btn-info">View</a>
