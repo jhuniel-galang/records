@@ -36,61 +36,52 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>File Name</th>
-                        <th>School</th>
-                        <th>Type</th>
-                        <th>Size</th>
-                        <th>Uploaded By</th>
-                        <th>Upload Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(count($documents) > 0): ?>
-                        <?php foreach($documents as $doc): ?>
-                        <tr>
-                            <td><?php echo $doc['id']; ?></td>
-                            <td>
-                                <i class="bi bi-file-<?php 
-                                    echo $doc['file_type'] == 'pdf' ? 'pdf' : 
-                                        (in_array($doc['file_type'], ['jpg', 'jpeg', 'png', 'gif']) ? 'image' : 'text'); 
-                                ?>"></i>
-                                <?php echo htmlspecialchars($doc['file_name']); ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($doc['school_name']); ?></td>
-                            <td>
-                                <span class="badge bg-info"><?php echo htmlspecialchars($doc['document_type']); ?></span>
-                            </td>
-                            <td><?php echo round($doc['file_size'] / 1024, 2); ?> KB</td>
-                            <td><?php echo htmlspecialchars($doc['uploader_name'] ?? 'Unknown'); ?></td>
-                            <td><?php echo date('Y-m-d H:i', strtotime($doc['uploader_at'])); ?></td>
-                            <td>
-                                <a href="index.php?controller=document&action=view&id=<?php echo $doc['id']; ?>" 
-                                   class="btn btn-sm btn-info" title="View">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="index.php?controller=document&action=edit&id=<?php echo $doc['id']; ?>" 
-                                   class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="index.php?controller=document&action=delete&id=<?php echo $doc['id']; ?>" 
-                                   class="btn btn-sm btn-danger" 
-                                   onclick="return confirm('Move this document to archive?')"
-                                   title="Move to Archive">
-                                    <i class="bi bi-archive"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="8" class="text-center">No documents found</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
+                <!-- In the table header, add new columns -->
+<thead>
+    <tr>
+        <th>ID</th>
+        <th>Document Title</th>
+        <th>Year</th>
+        <th>File Name</th>
+        <th>School</th>
+        <th>Type</th>
+        <th>Size</th>
+        <th>Uploaded By</th>
+        <th>Upload Date</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+
+<!-- In the table body, add the new fields -->
+<tbody>
+    <?php if(count($documents) > 0): ?>
+        <?php foreach($documents as $doc): ?>
+        <tr>
+            <td><?php echo $doc['id']; ?></td>
+            <td><strong><?php echo htmlspecialchars($doc['doc_title'] ?: 'Untitled'); ?></strong></td>
+            <td><?php echo htmlspecialchars($doc['doc_year'] ?: 'N/A'); ?></td>
+            <td>
+                <?php 
+                if($doc['file_type'] == 'pdf') echo '📄';
+                elseif(in_array($doc['file_type'], ['jpg', 'jpeg', 'png', 'gif'])) echo '🖼️';
+                else echo '📁';
+                ?>
+                <?php echo htmlspecialchars($doc['file_name']); ?>
+            </td>
+            <td><?php echo htmlspecialchars($doc['school_name']); ?></td>
+            <td><span class="badge bg-info"><?php echo htmlspecialchars($doc['document_type']); ?></span></td>
+            <td><?php echo round($doc['file_size'] / 1024, 2); ?> KB</td>
+            <td><?php echo htmlspecialchars($doc['uploader_name'] ?? 'Unknown'); ?></td>
+            <td><?php echo date('Y-m-d H:i', strtotime($doc['uploader_at'])); ?></td>
+            <td>
+                <a href="index.php?controller=document&action=view&id=<?php echo $doc['id']; ?>" class="btn btn-sm btn-info">View</a>
+                <a href="index.php?controller=document&action=edit&id=<?php echo $doc['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                <a href="index.php?controller=document&action=delete&id=<?php echo $doc['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Move this document to archive?')">Archive</a>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
             </table>
         </div>
     </div>

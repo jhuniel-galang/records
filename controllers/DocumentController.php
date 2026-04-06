@@ -73,6 +73,8 @@ public function store() {
         
         $file = $_FILES['document'];
         $school_name = $_POST['school_name'] ?? '';
+        $doc_title = $_POST['doc_title'] ?? '';
+        $doc_year = $_POST['doc_year'] ?? '';
         $remarks = $_POST['remarks'] ?? '';
         $document_type = $_POST['document_type'] ?? 'Other';
         
@@ -110,6 +112,8 @@ public function store() {
             $document->user_id = $_SESSION['user_id'];
             $document->school_name = $school_name;
             $document->file_name = $file['name'];
+            $document->doc_title = $doc_title;
+            $document->doc_year = $doc_year;
             $document->file_path = 'uploads/' . $new_filename;
             $document->file_type = $file_ext;
             $document->file_size = $file['size'];
@@ -118,21 +122,19 @@ public function store() {
             
             $newData = [
                 'file_name' => $file['name'],
+                'doc_title' => $doc_title,
+                'doc_year' => $doc_year,
                 'school_name' => $school_name,
                 'document_type' => $document_type,
                 'file_size' => $file['size'],
                 'file_type' => $file_ext
             ];
             
-            // Get the document ID after upload by getting the last inserted ID from the model
-            // We need to add a method to get the last insert ID from the document model
             if ($document->upload()) {
-                // Get the last inserted ID from the document model
                 $doc_id = $document->getLastInsertId();
                 
                 // If it's a Form 137 PDF, extract data
                 if ($document_type == 'Form 137' && $file_ext == 'pdf') {
-                    // Check if PDFParser exists
                     if (file_exists(__DIR__ . '/../helpers/PDFParser.php')) {
                         require_once __DIR__ . '/../helpers/PDFParser.php';
                         $parser = new PDFParser();
@@ -142,7 +144,7 @@ public function store() {
                             $document->updateExtractedData($doc_id, $extractedData);
                             $_SESSION['success'] = 'Document uploaded successfully! Student data extracted.';
                         } else {
-                            $_SESSION['success'] = 'Document uploaded successfully! (No data could be extracted)';
+                            $_SESSION['success'] = 'Document uploaded successfully!';
                         }
                     } else {
                         $_SESSION['success'] = 'Document uploaded successfully!';
@@ -166,7 +168,6 @@ public function store() {
                 
                 $this->redirect('index.php?controller=document&action=index');
             } else {
-                // Delete uploaded file if database insert fails
                 unlink($upload_path);
                 $_SESSION['error'] = 'Failed to save document information';
                 $this->redirect('index.php?controller=document&action=upload');
@@ -179,26 +180,26 @@ public function store() {
 }
 
         // View document details
-        public function view() {
-            $id = $_GET['id'] ?? 0;
-            
-            $document = new Document();
-            if($document->getDocumentById($id)) {
-                
-                // Get file size in human readable format
-                $file_size_formatted = $document->getFileSize($document->file_size);
-                
-                $data = [
-                    'document' => $document,
-                    'file_size_formatted' => $file_size_formatted,
-                    'title' => 'View Document'
-                ];
-                $this->render('document/view.php', $data);
-            } else {
-                $_SESSION['error'] = 'Document not found';
-                $this->redirect('index.php?controller=document&action=index');
-            }
-        }
+public function view() {
+    $id = $_GET['id'] ?? 0;
+    
+    $document = new Document();
+    if($document->getDocumentById($id)) {
+        
+        // Get file size in human readable format
+        $file_size_formatted = $document->getFileSize($document->file_size);
+        
+        $data = [
+            'document' => $document,
+            'file_size_formatted' => $file_size_formatted,
+            'title' => 'View Document'
+        ];
+        $this->render('document/view.php', $data);
+    } else {
+        $_SESSION['error'] = 'Document not found';
+        $this->redirect('index.php?controller=document&action=index');
+    }
+}
 
         // Preview document (strictly view-only, no download)
 public function preview() {
@@ -276,52 +277,60 @@ public function edit() {
 }
 
         // Update document
-        public function update() {
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                
-                $document = new Document();
-                
-                // Get old data for logging
-                $document->getDocumentById($_POST['id']);
-                $oldData = [
-                    'school_name' => $document->school_name,
-                    'remarks' => $document->remarks,
-                    'document_type' => $document->document_type
-                ];
-                
-                $document->id = $_POST['id'];
-                $document->school_name = $_POST['school_name'];
-                $document->remarks = $_POST['remarks'];
-                $document->document_type = $_POST['document_type'];
-                
-                $newData = [
-                    'school_name' => $document->school_name,
-                    'remarks' => $document->remarks,
-                    'document_type' => $document->document_type
-                ];
-                
-                if ($document->update()) {
-                    // Log activity
-                    $this->activityLog->log(
-                        $_SESSION['user_id'],
-                        $_SESSION['user_username'],
-                        'UPDATE_DOCUMENT',
-                        'Updated document: ' . $document->file_name,
-                        'DocumentController',
-                        'update',
-                        $oldData,
-                        $newData,
-                        'success'
-                    );
-                    
-                    $_SESSION['success'] = 'Document updated successfully';
-                } else {
-                    $_SESSION['error'] = 'Failed to update document';
-                }
-                
-                $this->redirect('index.php?controller=document&action=index');
-            }
+public function update() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        
+        $document = new Document();
+        
+        // First, get the document to get old data and file name
+        $document->getDocumentById($_POST['id']);
+        
+        $oldData = [
+            'school_name' => $document->school_name,
+            'doc_title' => $document->doc_title,
+            'doc_year' => $document->doc_year,
+            'remarks' => $document->remarks,
+            'document_type' => $document->document_type
+        ];
+        
+        // Set new values
+        $document->id = $_POST['id'];
+        $document->school_name = $_POST['school_name'];
+        $document->doc_title = $_POST['doc_title'];
+        $document->doc_year = $_POST['doc_year'];
+        $document->remarks = $_POST['remarks'];
+        $document->document_type = $_POST['document_type'];
+        
+        $newData = [
+            'school_name' => $document->school_name,
+            'doc_title' => $document->doc_title,
+            'doc_year' => $document->doc_year,
+            'remarks' => $document->remarks,
+            'document_type' => $document->document_type
+        ];
+        
+        if ($document->update()) {
+            // Log activity
+            $this->activityLog->log(
+                $_SESSION['user_id'],
+                $_SESSION['user_username'],
+                'UPDATE_DOCUMENT',
+                'Updated document: ' . $document->file_name,
+                'DocumentController',
+                'update',
+                $oldData,
+                $newData,
+                'success'
+            );
+            
+            $_SESSION['success'] = 'Document updated successfully';
+        } else {
+            $_SESSION['error'] = 'Failed to update document';
         }
+        
+        $this->redirect('index.php?controller=document&action=index');
+    }
+}
 
         public function delete() {
     $id = $_GET['id'] ?? 0;

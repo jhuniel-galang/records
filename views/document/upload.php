@@ -13,6 +13,22 @@
                 </div>
                 
                 <div class="col-md-6 mb-3">
+                    <label for="doc_title" class="form-label">Document Title *</label>
+                    <input type="text" class="form-control" id="doc_title" name="doc_title" 
+                           placeholder="Enter document title" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="doc_year" class="form-label">Document Year</label>
+                    <select class="form-control" id="doc_year" name="doc_year">
+                        <option value="">Select Year</option>
+                        <?php for($y = date('Y'); $y >= 2000; $y--): ?>
+                            <option value="<?php echo $y; ?>"><?php echo $y; ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
                     <label for="school_name" class="form-label">School *</label>
                     <select class="form-control" id="school_name" name="school_name" required>
                         <option value="">Select School</option>

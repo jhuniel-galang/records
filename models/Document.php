@@ -9,6 +9,8 @@ class Document {
     public $user_id;
     public $school_name;
     public $file_name;
+    public $doc_title;
+    public $doc_year;
     public $file_path;
     public $file_type;
     public $file_size;
@@ -30,6 +32,8 @@ class Document {
                       SET user_id = :user_id,
                           school_name = :school_name,
                           file_name = :file_name,
+                          doc_title = :doc_title,
+                          doc_year = :doc_year,
                           file_path = :file_path,
                           file_type = :file_type,
                           file_size = :file_size,
@@ -42,6 +46,8 @@ class Document {
             $stmt->bindParam(':user_id', $this->user_id);
             $stmt->bindParam(':school_name', $this->school_name);
             $stmt->bindParam(':file_name', $this->file_name);
+            $stmt->bindParam(':doc_title', $this->doc_title);
+            $stmt->bindParam(':doc_year', $this->doc_year);
             $stmt->bindParam(':file_path', $this->file_path);
             $stmt->bindParam(':file_type', $this->file_type);
             $stmt->bindParam(':file_size', $this->file_size);
@@ -131,6 +137,8 @@ class Document {
                 $this->user_id = $row['user_id'];
                 $this->school_name = $row['school_name'];
                 $this->file_name = $row['file_name'];
+                $this->doc_title = $row['doc_title'];
+                $this->doc_year = $row['doc_year'];
                 $this->file_path = $row['file_path'];
                 $this->file_type = $row['file_type'];
                 $this->file_size = $row['file_size'];
@@ -147,28 +155,32 @@ class Document {
         }
     }
 
-    // Update document
-    public function update() {
-        try {
-            $query = "UPDATE " . $this->table . " 
-                      SET school_name = :school_name,
-                          remarks = :remarks,
-                          document_type = :document_type
-                      WHERE id = :id";
-            
-            $stmt = $this->conn->prepare($query);
-            
-            $stmt->bindParam(':school_name', $this->school_name);
-            $stmt->bindParam(':remarks', $this->remarks);
-            $stmt->bindParam(':document_type', $this->document_type);
-            $stmt->bindParam(':id', $this->id);
-            
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Document update Error: " . $e->getMessage());
-            return false;
-        }
+   // Update document
+public function update() {
+    try {
+        $query = "UPDATE " . $this->table . " 
+                  SET school_name = :school_name,
+                      doc_title = :doc_title,
+                      doc_year = :doc_year,
+                      remarks = :remarks,
+                      document_type = :document_type
+                  WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        $stmt->bindParam(':school_name', $this->school_name);
+        $stmt->bindParam(':doc_title', $this->doc_title);
+        $stmt->bindParam(':doc_year', $this->doc_year);
+        $stmt->bindParam(':remarks', $this->remarks);
+        $stmt->bindParam(':document_type', $this->document_type);
+        $stmt->bindParam(':id', $this->id);
+        
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("Document update Error: " . $e->getMessage());
+        return false;
     }
+}
 
     // Soft delete document
     public function delete($id) {
@@ -248,191 +260,319 @@ class Document {
     }
 
     // Get document types for dropdown
-public function getDocumentTypes() {
-    try {
-        $query = "SELECT id, type_name FROM document_types WHERE status = 1 ORDER BY type_name";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Document getDocumentTypes Error: " . $e->getMessage());
-        return [];
+    public function getDocumentTypes() {
+        try {
+            $query = "SELECT id, type_name FROM document_types WHERE status = 1 ORDER BY type_name";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Document getDocumentTypes Error: " . $e->getMessage());
+            return [];
+        }
     }
-}
 
-
-// Add this method to the Document class
-public function updateExtractedData($id, $extracted_data) {
-    try {
-        $query = "UPDATE " . $this->table . " 
-                  SET extracted_data = :extracted_data 
-                  WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $extracted_json = json_encode($extracted_data);
-        $stmt->bindParam(':extracted_data', $extracted_json);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        error_log("Document updateExtractedData Error: " . $e->getMessage());
-        return false;
+    // Update extracted data
+    public function updateExtractedData($id, $extracted_data) {
+        try {
+            $query = "UPDATE " . $this->table . " 
+                      SET extracted_data = :extracted_data 
+                      WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $extracted_json = json_encode($extracted_data);
+            $stmt->bindParam(':extracted_data', $extracted_json);
+            $stmt->bindParam(':id', $id);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Document updateExtractedData Error: " . $e->getMessage());
+            return false;
+        }
     }
-}
 
-// Get document with extracted data
-public function getDocumentWithData($id) {
-    try {
-        $query = "SELECT d.*, u.username as uploader_name 
-                  FROM " . $this->table . " d
-                  LEFT JOIN users u ON d.user_id = u.id
-                  WHERE d.id = :id LIMIT 1";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        
-        if($stmt->rowCount() > 0) {
+    // Get document with extracted data
+    public function getDocumentWithData($id) {
+        try {
+            $query = "SELECT d.*, u.username as uploader_name 
+                      FROM " . $this->table . " d
+                      LEFT JOIN users u ON d.user_id = u.id
+                      WHERE d.id = :id LIMIT 1";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            if($stmt->rowCount() > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                if(isset($row['extracted_data'])) {
+                    $row['extracted_data'] = json_decode($row['extracted_data'], true);
+                }
+                return $row;
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Document getDocumentWithData Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Get last insert ID
+    public function getLastInsertId() {
+        try {
+            return $this->conn->lastInsertId();
+        } catch (PDOException $e) {
+            error_log("Document getLastInsertId Error: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Get all documents including inactive (for archive)
+    public function getAllDocumentsWithInactive($filters = [], $limit = 50, $offset = 0) {
+        try {
+            $query = "SELECT d.*, u.username as uploader_name 
+                      FROM " . $this->table . " d
+                      LEFT JOIN users u ON d.user_id = u.id
+                      WHERE 1=1";
+            $params = [];
+            
+            if(!empty($filters['search'])) {
+                $search = '%' . $filters['search'] . '%';
+                $query .= " AND (d.file_name LIKE :search OR d.school_name LIKE :search OR d.doc_title LIKE :search)";
+                $params[':search'] = $search;
+            }
+            
+            if(!empty($filters['document_type'])) {
+                $query .= " AND d.document_type = :document_type";
+                $params[':document_type'] = $filters['document_type'];
+            }
+            
+            if(!empty($filters['doc_year'])) {
+                $query .= " AND d.doc_year = :doc_year";
+                $params[':doc_year'] = $filters['doc_year'];
+            }
+            
+            // Show only inactive documents (status = 0)
+            $query .= " AND d.status = 0";
+            
+            $query .= " ORDER BY d.delete_at DESC LIMIT :limit OFFSET :offset";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            foreach($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Document getAllDocumentsWithInactive Error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    // Count archived documents
+    public function countArchivedDocuments($filters = []) {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE status = 0";
+            $params = [];
+            
+            if(!empty($filters['search'])) {
+                $search = '%' . $filters['search'] . '%';
+                $query .= " AND (file_name LIKE :search OR school_name LIKE :search OR doc_title LIKE :search)";
+                $params[':search'] = $search;
+            }
+            
+            if(!empty($filters['document_type'])) {
+                $query .= " AND document_type = :document_type";
+                $params[':document_type'] = $filters['document_type'];
+            }
+            
+            if(!empty($filters['doc_year'])) {
+                $query .= " AND doc_year = :doc_year";
+                $params[':doc_year'] = $filters['doc_year'];
+            }
+            
+            $stmt = $this->conn->prepare($query);
+            
+            foreach($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if(isset($row['extracted_data'])) {
-                $row['extracted_data'] = json_decode($row['extracted_data'], true);
+            return $row['total'];
+        } catch (PDOException $e) {
+            error_log("Document countArchivedDocuments Error: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Permanently delete document (hard delete)
+    public function permanentDelete($id) {
+        try {
+            // Get file path first
+            $query = "SELECT file_path FROM " . $this->table . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if($row) {
+                $file_path = __DIR__ . '/../' . $row['file_path'];
+                // Delete the physical file
+                if(file_exists($file_path)) {
+                    unlink($file_path);
+                }
             }
-            return $row;
+            
+            // Delete from database
+            $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Document permanentDelete Error: " . $e->getMessage());
+            return false;
         }
-        return false;
-    } catch (PDOException $e) {
-        error_log("Document getDocumentWithData Error: " . $e->getMessage());
-        return false;
     }
-}
 
-
-// Get last insert ID
-public function getLastInsertId() {
-    try {
-        return $this->conn->lastInsertId();
-    } catch (PDOException $e) {
-        error_log("Document getLastInsertId Error: " . $e->getMessage());
-        return 0;
+    // Restore document from archive
+    public function restoreFromArchive($id) {
+        try {
+            $query = "UPDATE " . $this->table . " 
+                      SET status = 1, delete_at = NULL 
+                      WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Document restoreFromArchive Error: " . $e->getMessage());
+            return false;
+        }
     }
-}
 
-
-
-// Get all documents including inactive (for archive)
-public function getAllDocumentsWithInactive($filters = [], $limit = 50, $offset = 0) {
-    try {
-        $query = "SELECT d.*, u.username as uploader_name 
-                  FROM " . $this->table . " d
-                  LEFT JOIN users u ON d.user_id = u.id
-                  WHERE 1=1";
-        $params = [];
-        
-        if(!empty($filters['search'])) {
-            $search = '%' . $filters['search'] . '%';
-            $query .= " AND (d.file_name LIKE :search OR d.school_name LIKE :search)";
-            $params[':search'] = $search;
-        }
-        
-        if(!empty($filters['document_type'])) {
-            $query .= " AND d.document_type = :document_type";
-            $params[':document_type'] = $filters['document_type'];
-        }
-        
-        // Show only inactive documents (status = 0)
-        $query .= " AND d.status = 0";
-        
-        $query .= " ORDER BY d.delete_at DESC LIMIT :limit OFFSET :offset";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        foreach($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-        
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Document getAllDocumentsWithInactive Error: " . $e->getMessage());
-        return [];
-    }
-}
-
-// Count archived documents
-public function countArchivedDocuments($filters = []) {
-    try {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE status = 0";
-        $params = [];
-        
-        if(!empty($filters['search'])) {
-            $search = '%' . $filters['search'] . '%';
-            $query .= " AND (file_name LIKE :search OR school_name LIKE :search)";
-            $params[':search'] = $search;
-        }
-        
-        if(!empty($filters['document_type'])) {
-            $query .= " AND document_type = :document_type";
-            $params[':document_type'] = $filters['document_type'];
-        }
-        
-        $stmt = $this->conn->prepare($query);
-        
-        foreach($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'];
-    } catch (PDOException $e) {
-        error_log("Document countArchivedDocuments Error: " . $e->getMessage());
-        return 0;
-    }
-}
-
-// Permanently delete document (hard delete)
-public function permanentDelete($id) {
-    try {
-        // Get file path first
-        $query = "SELECT file_path FROM " . $this->table . " WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if($row) {
-            $file_path = __DIR__ . '/../' . $row['file_path'];
-            // Delete the physical file
-            if(file_exists($file_path)) {
-                unlink($file_path);
+    // Get all documents with pagination, filtering, and sorting
+    public function getAllDocumentsPaginated($limit, $offset, $filters = [], $sort_by = 'id', $sort_order = 'DESC') {
+        try {
+            $query = "SELECT d.*, u.username as uploader_name 
+                      FROM " . $this->table . " d
+                      LEFT JOIN users u ON d.user_id = u.id
+                      WHERE d.status = 1";
+            $params = [];
+            
+            // Apply filters
+            if(!empty($filters['search'])) {
+                $search = '%' . $filters['search'] . '%';
+                $query .= " AND (d.file_name LIKE :search OR d.school_name LIKE :search OR d.doc_title LIKE :search)";
+                $params[':search'] = $search;
             }
+            
+            if(!empty($filters['document_type'])) {
+                $query .= " AND d.document_type = :document_type";
+                $params[':document_type'] = $filters['document_type'];
+            }
+            
+            if(!empty($filters['doc_year'])) {
+                $query .= " AND d.doc_year = :doc_year";
+                $params[':doc_year'] = $filters['doc_year'];
+            }
+            
+            if(!empty($filters['date_from'])) {
+                $query .= " AND DATE(d.uploader_at) >= :date_from";
+                $params[':date_from'] = $filters['date_from'];
+            }
+            
+            if(!empty($filters['date_to'])) {
+                $query .= " AND DATE(d.uploader_at) <= :date_to";
+                $params[':date_to'] = $filters['date_to'];
+            }
+            
+            // Allowed sort columns
+            $allowed_sort = ['id', 'file_name', 'doc_title', 'doc_year', 'uploader_at'];
+            $sort_by = in_array($sort_by, $allowed_sort) ? $sort_by : 'id';
+            $sort_order = $sort_order == 'ASC' ? 'ASC' : 'DESC';
+            
+            $query .= " ORDER BY " . $sort_by . " " . $sort_order . " LIMIT :limit OFFSET :offset";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            foreach($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Document getAllDocumentsPaginated Error: " . $e->getMessage());
+            return [];
         }
-        
-        // Delete from database
-        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        error_log("Document permanentDelete Error: " . $e->getMessage());
-        return false;
     }
-}
 
-// Restore document from archive
-public function restoreFromArchive($id) {
-    try {
-        $query = "UPDATE " . $this->table . " 
-                  SET status = 1, delete_at = NULL 
-                  WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        error_log("Document restoreFromArchive Error: " . $e->getMessage());
-        return false;
+    // Count documents with filters
+    public function countDocuments($filters = []) {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE status = 1";
+            $params = [];
+            
+            if(!empty($filters['search'])) {
+                $search = '%' . $filters['search'] . '%';
+                $query .= " AND (file_name LIKE :search OR school_name LIKE :search OR doc_title LIKE :search)";
+                $params[':search'] = $search;
+            }
+            
+            if(!empty($filters['document_type'])) {
+                $query .= " AND document_type = :document_type";
+                $params[':document_type'] = $filters['document_type'];
+            }
+            
+            if(!empty($filters['doc_year'])) {
+                $query .= " AND doc_year = :doc_year";
+                $params[':doc_year'] = $filters['doc_year'];
+            }
+            
+            if(!empty($filters['date_from'])) {
+                $query .= " AND DATE(uploader_at) >= :date_from";
+                $params[':date_from'] = $filters['date_from'];
+            }
+            
+            if(!empty($filters['date_to'])) {
+                $query .= " AND DATE(uploader_at) <= :date_to";
+                $params[':date_to'] = $filters['date_to'];
+            }
+            
+            $stmt = $this->conn->prepare($query);
+            
+            foreach($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['total'];
+        } catch (PDOException $e) {
+            error_log("Document countDocuments Error: " . $e->getMessage());
+            return 0;
+        }
     }
-}
+
+    // Get unique years for filter
+    public function getDocumentYears() {
+        try {
+            $query = "SELECT DISTINCT doc_year FROM " . $this->table . " 
+                      WHERE doc_year IS NOT NULL AND doc_year != '' AND status = 1
+                      ORDER BY doc_year DESC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Document getDocumentYears Error: " . $e->getMessage());
+            return [];
+        }
+    }
 }
 ?>

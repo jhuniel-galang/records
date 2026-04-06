@@ -5,6 +5,15 @@ class Database {
     private $username = "root";
     private $password = "";
     public $conn;
+    private static $instance = null;
+
+    // Singleton pattern to prevent multiple connections
+    public static function getInstance() {
+        if (self::$instance == null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
+    }
 
     public function getConnection() {
         $this->conn = null;
@@ -12,10 +21,16 @@ class Database {
             $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, 
                                   $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn->setAttribute(PDO::ATTR_PERSISTENT, false); // Disable persistent connections
         } catch(PDOException $e) {
-            echo "Connection error: " . $e->getMessage();
+            error_log("Connection error: " . $e->getMessage());
         }
         return $this->conn;
+    }
+    
+    // Close connection
+    public function closeConnection() {
+        $this->conn = null;
     }
 }
 ?>
