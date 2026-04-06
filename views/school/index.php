@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>School Management</h2>
     <a href="index.php?controller=school&action=create" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Add New School
+         Add New School
     </a>
 </div>
 
@@ -55,12 +55,12 @@
             
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Filter
+                     Filter
                 </button>
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <a href="index.php?controller=school&action=index" class="btn btn-secondary w-100">
-                    <i class="bi bi-arrow-repeat"></i> Reset
+                     Reset
                 </a>
             </div>
         </form>
@@ -103,7 +103,7 @@
                             <a href="?controller=school&action=index&sort=id&order=<?php echo $sort_order == 'ASC' ? 'DESC' : 'ASC'; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>" class="text-decoration-none text-dark">
                                 ID
                                 <?php if($sort_by == 'id'): ?>
-                                    <i class="bi bi-caret-<?php echo $sort_order == 'ASC' ? 'up' : 'down'; ?>-fill"></i>
+                                    <?php echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </a>
                         </th>
@@ -111,7 +111,7 @@
                             <a href="?controller=school&action=index&sort=school_name&order=<?php echo $sort_order == 'ASC' ? 'DESC' : 'ASC'; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>" class="text-decoration-none text-dark">
                                 School Name
                                 <?php if($sort_by == 'school_name'): ?>
-                                    <i class="bi bi-caret-<?php echo $sort_order == 'ASC' ? 'up' : 'down'; ?>-fill"></i>
+                                    <?php echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </a>
                         </th>
@@ -119,7 +119,7 @@
                             <a href="?controller=school&action=index&sort=level&order=<?php echo $sort_order == 'ASC' ? 'DESC' : 'ASC'; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>" class="text-decoration-none text-dark">
                                 Level
                                 <?php if($sort_by == 'level'): ?>
-                                    <i class="bi bi-caret-<?php echo $sort_order == 'ASC' ? 'up' : 'down'; ?>-fill"></i>
+                                    <?php echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </a>
                         </th>
@@ -130,7 +130,7 @@
                             <a href="?controller=school&action=index&sort=status&order=<?php echo $sort_order == 'ASC' ? 'DESC' : 'ASC'; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>" class="text-decoration-none text-dark">
                                 Status
                                 <?php if($sort_by == 'status'): ?>
-                                    <i class="bi bi-caret-<?php echo $sort_order == 'ASC' ? 'up' : 'down'; ?>-fill"></i>
+                                    <?php echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </a>
                         </th>
@@ -160,27 +160,19 @@
                             </td>
                             <td>
                                 <a href="index.php?controller=school&action=view&id=<?php echo $school['id']; ?>" 
-                                   class="btn btn-sm btn-info" title="View">
-                                    <i class="bi bi-eye"></i>
-                                </a>
+                                   class="btn btn-sm btn-info" title="View">View</a>
                                 <a href="index.php?controller=school&action=edit&id=<?php echo $school['id']; ?>" 
-                                   class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
+                                   class="btn btn-sm btn-warning" title="Edit">Edit</a>
                                 <?php if($school['status'] == 1): ?>
                                     <a href="index.php?controller=school&action=delete&id=<?php echo $school['id']; ?>" 
                                        class="btn btn-sm btn-danger" 
                                        onclick="return confirm('Are you sure you want to deactivate this school?')"
-                                       title="Deactivate">
-                                        <i class="bi bi-building-x"></i>
-                                    </a>
+                                       title="Deactivate">Deactivate</a>
                                 <?php else: ?>
                                     <a href="index.php?controller=school&action=activate&id=<?php echo $school['id']; ?>" 
                                        class="btn btn-sm btn-success" 
                                        onclick="return confirm('Are you sure you want to activate this school?')"
-                                       title="Activate">
-                                        <i class="bi bi-building-check"></i>
-                                    </a>
+                                       title="Activate">Activate</a>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -200,14 +192,18 @@
         $total_pages = isset($total_pages) ? (int)$total_pages : 1;
         $limit = isset($limit) ? (int)$limit : 10;
         $total_schools = isset($total_schools) ? (int)$total_schools : 0;
+        
+        $start_entry = ($current_page - 1) * $limit + 1;
+        if ($start_entry < 1) $start_entry = 1;
+        $end_entry = min($current_page * $limit, $total_schools);
         ?>
         
         <?php if($total_pages > 1): ?>
         <nav aria-label="Page navigation" class="mt-4">
             <ul class="pagination justify-content-center">
                 <li class="page-item <?php echo $current_page <= 1 ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?controller=school&action=index&page=<?php echo $current_page-1; ?>&limit=<?php echo $limit; ?>&sort=<?php echo $sort_by; ?>&order=<?php echo $sort_order; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">
-                        <i class="bi bi-chevron-left"></i> Previous
+                    <a class="page-link" href="?controller=school&action=index&page=<?php echo max(1, $current_page-1); ?>&limit=<?php echo $limit; ?>&sort=<?php echo $sort_by; ?>&order=<?php echo $sort_order; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">
+                        ← Previous
                     </a>
                 </li>
                 
@@ -240,8 +236,8 @@
                 <?php endif; ?>
                 
                 <li class="page-item <?php echo $current_page >= $total_pages ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?controller=school&action=index&page=<?php echo $current_page+1; ?>&limit=<?php echo $limit; ?>&sort=<?php echo $sort_by; ?>&order=<?php echo $sort_order; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">
-                        Next <i class="bi bi-chevron-right"></i>
+                    <a class="page-link" href="?controller=school&action=index&page=<?php echo min($total_pages, $current_page+1); ?>&limit=<?php echo $limit; ?>&sort=<?php echo $sort_by; ?>&order=<?php echo $sort_order; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">
+                        Next →
                     </a>
                 </li>
             </ul>
@@ -251,7 +247,7 @@
         <!-- Items per page selector -->
         <div class="d-flex justify-content-between align-items-center mt-3">
             <div class="text-muted small">
-                Showing <?php echo ($current_page - 1) * $limit + 1; ?> to <?php echo min($current_page * $limit, $total_schools); ?> of <?php echo $total_schools; ?> entries
+                Showing <?php echo $start_entry; ?> to <?php echo $end_entry; ?> of <?php echo $total_schools; ?> entries
             </div>
             <div class="d-flex align-items-center gap-2">
                 <label class="text-muted small mb-0">Show:</label>

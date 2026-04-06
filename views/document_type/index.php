@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Document Types Management</h2>
     <a href="index.php?controller=documenttype&action=create" class="btn btn-primary">
-        <i class="fas fa-plus-circle"></i> Add Document Type
+        <i class="bi bi-plus-circle"></i> Add Document Type
     </a>
 </div>
 
@@ -59,21 +59,21 @@
                             <td>
                                 <a href="index.php?controller=documenttype&action=edit&id=<?= $type['id'] ?>" 
                                    class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="bi bi-pencil"></i>
                                 </a>
                                 <?php if($type['status'] == 1): ?>
                                     <a href="index.php?controller=documenttype&action=delete&id=<?= $type['id'] ?>" 
                                        class="btn btn-sm btn-danger" 
                                        onclick="return confirm('Are you sure you want to deactivate this document type?')"
                                        title="Deactivate">
-                                        <i class="fas fa-ban"></i>
+                                        <i class="bi bi-slash-circle"></i>
                                     </a>
                                 <?php else: ?>
                                     <a href="index.php?controller=documenttype&action=activate&id=<?= $type['id'] ?>" 
                                        class="btn btn-sm btn-success" 
                                        onclick="return confirm('Activate this document type?')"
                                        title="Activate">
-                                        <i class="fas fa-check-circle"></i>
+                                        <i class="bi bi-check-circle"></i>
                                     </a>
                                 <?php endif; ?>
                             </td>

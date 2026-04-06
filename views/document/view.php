@@ -101,10 +101,7 @@
                     This document is confidential. Preview only - no download option.
                 </div>
                 
-                <a href="index.php?controller=document&action=preview&id=<?php echo $document->id; ?>" 
-                   class="btn btn-outline-primary mt-3" target="_blank">
-                    <i class="bi bi-eye"></i> View Full Preview
-                </a>
+                
             </div>
         </div>
     </div>

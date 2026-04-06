@@ -259,5 +259,180 @@ public function getDocumentTypes() {
         return [];
     }
 }
+
+
+// Add this method to the Document class
+public function updateExtractedData($id, $extracted_data) {
+    try {
+        $query = "UPDATE " . $this->table . " 
+                  SET extracted_data = :extracted_data 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $extracted_json = json_encode($extracted_data);
+        $stmt->bindParam(':extracted_data', $extracted_json);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("Document updateExtractedData Error: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Get document with extracted data
+public function getDocumentWithData($id) {
+    try {
+        $query = "SELECT d.*, u.username as uploader_name 
+                  FROM " . $this->table . " d
+                  LEFT JOIN users u ON d.user_id = u.id
+                  WHERE d.id = :id LIMIT 1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        
+        if($stmt->rowCount() > 0) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if(isset($row['extracted_data'])) {
+                $row['extracted_data'] = json_decode($row['extracted_data'], true);
+            }
+            return $row;
+        }
+        return false;
+    } catch (PDOException $e) {
+        error_log("Document getDocumentWithData Error: " . $e->getMessage());
+        return false;
+    }
+}
+
+
+// Get last insert ID
+public function getLastInsertId() {
+    try {
+        return $this->conn->lastInsertId();
+    } catch (PDOException $e) {
+        error_log("Document getLastInsertId Error: " . $e->getMessage());
+        return 0;
+    }
+}
+
+
+
+// Get all documents including inactive (for archive)
+public function getAllDocumentsWithInactive($filters = [], $limit = 50, $offset = 0) {
+    try {
+        $query = "SELECT d.*, u.username as uploader_name 
+                  FROM " . $this->table . " d
+                  LEFT JOIN users u ON d.user_id = u.id
+                  WHERE 1=1";
+        $params = [];
+        
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (d.file_name LIKE :search OR d.school_name LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['document_type'])) {
+            $query .= " AND d.document_type = :document_type";
+            $params[':document_type'] = $filters['document_type'];
+        }
+        
+        // Show only inactive documents (status = 0)
+        $query .= " AND d.status = 0";
+        
+        $query .= " ORDER BY d.delete_at DESC LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getAllDocumentsWithInactive Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Count archived documents
+public function countArchivedDocuments($filters = []) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE status = 0";
+        $params = [];
+        
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (file_name LIKE :search OR school_name LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['document_type'])) {
+            $query .= " AND document_type = :document_type";
+            $params[':document_type'] = $filters['document_type'];
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'];
+    } catch (PDOException $e) {
+        error_log("Document countArchivedDocuments Error: " . $e->getMessage());
+        return 0;
+    }
+}
+
+// Permanently delete document (hard delete)
+public function permanentDelete($id) {
+    try {
+        // Get file path first
+        $query = "SELECT file_path FROM " . $this->table . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if($row) {
+            $file_path = __DIR__ . '/../' . $row['file_path'];
+            // Delete the physical file
+            if(file_exists($file_path)) {
+                unlink($file_path);
+            }
+        }
+        
+        // Delete from database
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("Document permanentDelete Error: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Restore document from archive
+public function restoreFromArchive($id) {
+    try {
+        $query = "UPDATE " . $this->table . " 
+                  SET status = 1, delete_at = NULL 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("Document restoreFromArchive Error: " . $e->getMessage());
+        return false;
+    }
+}
 }
 ?>

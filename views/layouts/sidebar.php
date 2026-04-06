@@ -1,6 +1,7 @@
 <?php
 // Get current page for active state
 $current_page = $_GET['controller'] ?? 'dashboard';
+$action = $_GET['action'] ?? 'index';
 ?>
 <div class="col-md-3 col-lg-2 px-0">
     <div class="sidebar">
@@ -37,46 +38,48 @@ $current_page = $_GET['controller'] ?? 'dashboard';
             </li>
             <?php endif; ?>
 
-
-
             <?php if($_SESSION['user_role'] == 'admin'): ?>
-<li class="nav-item">
-    <a class="nav-link <?php echo $current_page == 'documenttype' ? 'active' : ''; ?>" 
-       href="index.php?controller=documenttype&action=index">
-        <i class="fas fa-tags"></i> Document Types
-    </a>
-</li>
-<?php endif; ?>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'documenttype' ? 'active' : ''; ?>" 
+                   href="index.php?controller=documenttype&action=index">
+                    <i class="fas fa-tags"></i> Document Types
+                </a>
+            </li>
+            <?php endif; ?>
 
-
-
+            <!-- Form 137 Menu (Visible to all logged in users) -->
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'form137' ? 'active' : ''; ?>" 
+                   href="index.php?controller=form137&action=index">
+                    <i class="bi bi-file-text"></i> Form 137
+                </a>
+            </li>
             
             <li class="nav-item">
-    <a class="nav-link <?php echo in_array($current_page, ['school']) ? 'active' : ''; ?>" 
-       href="#schoolsSubmenu" data-bs-toggle="collapse" aria-expanded="<?php echo in_array($current_page, ['school']) ? 'true' : 'false'; ?>">
-        <i class="bi bi-building"></i> Schools <span class="float-end">▼</span>
-    </a>
-    <ul class="collapse <?php echo in_array($current_page, ['school']) ? 'show' : ''; ?> list-unstyled" id="schoolsSubmenu">
-        <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'index' ? 'active' : ''; ?>" 
-               href="index.php?controller=school&action=index">View Schools</a></li>
-        <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'create' ? 'active' : ''; ?>" 
-               href="index.php?controller=school&action=create">Add School</a></li>
-    </ul>
-</li>
-
+                <a class="nav-link <?php echo in_array($current_page, ['school']) ? 'active' : ''; ?>" 
+                   href="#schoolsSubmenu" data-bs-toggle="collapse" aria-expanded="<?php echo in_array($current_page, ['school']) ? 'true' : 'false'; ?>">
+                    <i class="bi bi-building"></i> Schools <span class="float-end">▼</span>
+                </a>
+                <ul class="collapse <?php echo in_array($current_page, ['school']) ? 'show' : ''; ?> list-unstyled" id="schoolsSubmenu">
+                    <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'index' ? 'active' : ''; ?>" 
+                           href="index.php?controller=school&action=index">View Schools</a></li>
+                    <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'create' ? 'active' : ''; ?>" 
+                           href="index.php?controller=school&action=create">Add School</a></li>
+                </ul>
+            </li>
             
             <li class="nav-item">
-    <a class="nav-link <?php echo in_array($current_page, ['document']) ? 'active' : ''; ?>" 
-       href="#documentsSubmenu" data-bs-toggle="collapse" aria-expanded="<?php echo in_array($current_page, ['document']) ? 'true' : 'false'; ?>">
-        <i class="bi bi-file-text"></i> Documents <span class="float-end">▼</span>
-    </a>
-    <ul class="collapse <?php echo in_array($current_page, ['document']) ? 'show' : ''; ?> list-unstyled" id="documentsSubmenu">
-        <li><a class="nav-link ps-4 <?php echo $current_page == 'document' && $action == 'index' ? 'active' : ''; ?>" 
-               href="index.php?controller=document&action=index">All Documents</a></li>
-        <li><a class="nav-link ps-4 <?php echo $current_page == 'document' && $action == 'upload' ? 'active' : ''; ?>" 
-               href="index.php?controller=document&action=upload">Upload Document</a></li>
-    </ul>
-</li>
+                <a class="nav-link <?php echo in_array($current_page, ['document']) ? 'active' : ''; ?>" 
+                   href="#documentsSubmenu" data-bs-toggle="collapse" aria-expanded="<?php echo in_array($current_page, ['document']) ? 'true' : 'false'; ?>">
+                    <i class="bi bi-file-text"></i> Documents <span class="float-end">▼</span>
+                </a>
+                <ul class="collapse <?php echo in_array($current_page, ['document']) ? 'show' : ''; ?> list-unstyled" id="documentsSubmenu">
+                    <li><a class="nav-link ps-4 <?php echo $current_page == 'document' && $action == 'index' ? 'active' : ''; ?>" 
+                           href="index.php?controller=document&action=index">All Documents</a></li>
+                    <li><a class="nav-link ps-4 <?php echo $current_page == 'document' && $action == 'upload' ? 'active' : ''; ?>" 
+                           href="index.php?controller=document&action=upload">Upload Document</a></li>
+                </ul>
+            </li>
             
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=auth&action=logout">

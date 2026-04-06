@@ -474,9 +474,6 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
                 </div>
             </div>
         </div>
-        <div class="security-badge">
-            <i class="fas fa-lock"></i> Secure View Only
-        </div>
     </header>
 
     <!-- Main Container -->

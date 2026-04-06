@@ -18,10 +18,11 @@ $controllerMap = [
     'auth' => 'AuthController',
     'dashboard' => 'DashboardController',
     'user' => 'UserController',
-    'activitylog' => 'ActivityLogController', // Add this line
+    'activitylog' => 'ActivityLogController',
     'school' => 'SchoolController',
     'document' => 'DocumentController',
-    'documenttype' => 'DocumentTypeController'
+    'documenttype' => 'DocumentTypeController',
+    'form137' => 'Form137Controller'  // Add this line
 ];
 
 if (array_key_exists($controller, $controllerMap)) {

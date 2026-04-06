@@ -68,90 +68,115 @@ public function upload() {
 }
 
         // Process document upload
-        public function store() {
-            if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['document'])) {
+public function store() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['document'])) {
+        
+        $file = $_FILES['document'];
+        $school_name = $_POST['school_name'] ?? '';
+        $remarks = $_POST['remarks'] ?? '';
+        $document_type = $_POST['document_type'] ?? 'Other';
+        
+        // Validate file
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $_SESSION['error'] = 'Error uploading file';
+            $this->redirect('index.php?controller=document&action=upload');
+        }
+        
+        // Check file size (max 10MB)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            $_SESSION['error'] = 'File size too large. Maximum size is 10MB';
+            $this->redirect('index.php?controller=document&action=upload');
+        }
+        
+        // Get file extension
+        $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        // Allowed file types
+        $allowed_types = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'xls', 'xlsx'];
+        
+        if (!in_array($file_ext, $allowed_types)) {
+            $_SESSION['error'] = 'File type not allowed. Allowed types: ' . implode(', ', $allowed_types);
+            $this->redirect('index.php?controller=document&action=upload');
+        }
+        
+        // Generate unique filename
+        $new_filename = uniqid() . '_' . time() . '.' . $file_ext;
+        $upload_path = $this->uploadDir . $new_filename;
+        
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $upload_path)) {
+            
+            $document = new Document();
+            $document->user_id = $_SESSION['user_id'];
+            $document->school_name = $school_name;
+            $document->file_name = $file['name'];
+            $document->file_path = 'uploads/' . $new_filename;
+            $document->file_type = $file_ext;
+            $document->file_size = $file['size'];
+            $document->remarks = $remarks;
+            $document->document_type = $document_type;
+            
+            $newData = [
+                'file_name' => $file['name'],
+                'school_name' => $school_name,
+                'document_type' => $document_type,
+                'file_size' => $file['size'],
+                'file_type' => $file_ext
+            ];
+            
+            // Get the document ID after upload by getting the last inserted ID from the model
+            // We need to add a method to get the last insert ID from the document model
+            if ($document->upload()) {
+                // Get the last inserted ID from the document model
+                $doc_id = $document->getLastInsertId();
                 
-                $file = $_FILES['document'];
-                $school_name = $_POST['school_name'] ?? '';
-                $remarks = $_POST['remarks'] ?? '';
-                $document_type = $_POST['document_type'] ?? 'Other';
-                
-                // Validate file
-                if ($file['error'] !== UPLOAD_ERR_OK) {
-                    $_SESSION['error'] = 'Error uploading file';
-                    $this->redirect('index.php?controller=document&action=upload');
-                }
-                
-                // Check file size (max 10MB)
-                if ($file['size'] > 10 * 1024 * 1024) {
-                    $_SESSION['error'] = 'File size too large. Maximum size is 10MB';
-                    $this->redirect('index.php?controller=document&action=upload');
-                }
-                
-                // Get file extension
-                $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                
-                // Allowed file types
-                $allowed_types = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'xls', 'xlsx'];
-                
-                if (!in_array($file_ext, $allowed_types)) {
-                    $_SESSION['error'] = 'File type not allowed. Allowed types: ' . implode(', ', $allowed_types);
-                    $this->redirect('index.php?controller=document&action=upload');
-                }
-                
-                // Generate unique filename
-                $new_filename = uniqid() . '_' . time() . '.' . $file_ext;
-                $upload_path = $this->uploadDir . $new_filename;
-                
-                // Move uploaded file
-                if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-                    
-                    $document = new Document();
-                    $document->user_id = $_SESSION['user_id'];
-                    $document->school_name = $school_name;
-                    $document->file_name = $file['name'];
-                    $document->file_path = 'uploads/' . $new_filename;
-                    $document->file_type = $file_ext;
-                    $document->file_size = $file['size'];
-                    $document->remarks = $remarks;
-                    $document->document_type = $document_type;
-                    
-                    $newData = [
-                        'file_name' => $file['name'],
-                        'school_name' => $school_name,
-                        'document_type' => $document_type,
-                        'file_size' => $file['size'],
-                        'file_type' => $file_ext
-                    ];
-                    
-                    if ($document->upload()) {
-                        // Log activity
-                        $this->activityLog->log(
-                            $_SESSION['user_id'],
-                            $_SESSION['user_username'],
-                            'UPLOAD_DOCUMENT',
-                            'Uploaded document: ' . $file['name'],
-                            'DocumentController',
-                            'store',
-                            null,
-                            $newData,
-                            'success'
-                        );
+                // If it's a Form 137 PDF, extract data
+                if ($document_type == 'Form 137' && $file_ext == 'pdf') {
+                    // Check if PDFParser exists
+                    if (file_exists(__DIR__ . '/../helpers/PDFParser.php')) {
+                        require_once __DIR__ . '/../helpers/PDFParser.php';
+                        $parser = new PDFParser();
+                        $extractedData = $parser->extractStudentInfo('uploads/' . $new_filename);
                         
-                        $_SESSION['success'] = 'Document uploaded successfully';
-                        $this->redirect('index.php?controller=document&action=index');
+                        if ($extractedData && !empty($extractedData)) {
+                            $document->updateExtractedData($doc_id, $extractedData);
+                            $_SESSION['success'] = 'Document uploaded successfully! Student data extracted.';
+                        } else {
+                            $_SESSION['success'] = 'Document uploaded successfully! (No data could be extracted)';
+                        }
                     } else {
-                        // Delete uploaded file if database insert fails
-                        unlink($upload_path);
-                        $_SESSION['error'] = 'Failed to save document information';
+                        $_SESSION['success'] = 'Document uploaded successfully!';
                     }
                 } else {
-                    $_SESSION['error'] = 'Failed to upload file';
+                    $_SESSION['success'] = 'Document uploaded successfully';
                 }
                 
+                // Log activity
+                $this->activityLog->log(
+                    $_SESSION['user_id'],
+                    $_SESSION['user_username'],
+                    'UPLOAD_DOCUMENT',
+                    'Uploaded document: ' . $file['name'],
+                    'DocumentController',
+                    'store',
+                    null,
+                    $newData,
+                    'success'
+                );
+                
+                $this->redirect('index.php?controller=document&action=index');
+            } else {
+                // Delete uploaded file if database insert fails
+                unlink($upload_path);
+                $_SESSION['error'] = 'Failed to save document information';
                 $this->redirect('index.php?controller=document&action=upload');
             }
+        } else {
+            $_SESSION['error'] = 'Failed to upload file';
+            $this->redirect('index.php?controller=document&action=upload');
         }
+    }
+}
 
         // View document details
         public function view() {
@@ -298,38 +323,37 @@ public function edit() {
             }
         }
 
-        // Delete document (soft delete)
         public function delete() {
-            $id = $_GET['id'] ?? 0;
-            
-            $document = new Document();
-            $document->getDocumentById($id);
-            $documentData = [
-                'id' => $document->id,
-                'file_name' => $document->file_name
-            ];
-            
-            if($document->delete($id)) {
-                // Log activity
-                $this->activityLog->log(
-                    $_SESSION['user_id'],
-                    $_SESSION['user_username'],
-                    'DELETE_DOCUMENT',
-                    'Deleted document: ' . $document->file_name,
-                    'DocumentController',
-                    'delete',
-                    $documentData,
-                    ['status' => 0],
-                    'success'
-                );
-                
-                $_SESSION['success'] = 'Document deleted successfully';
-            } else {
-                $_SESSION['error'] = 'Failed to delete document';
-            }
-            
-            $this->redirect('index.php?controller=document&action=index');
-        }
+    $id = $_GET['id'] ?? 0;
+    
+    $document = new Document();
+    $document->getDocumentById($id);
+    $documentData = [
+        'id' => $document->id,
+        'file_name' => $document->file_name
+    ];
+    
+    if($document->delete($id)) {
+        // Log activity
+        $this->activityLog->log(
+            $_SESSION['user_id'],
+            $_SESSION['user_username'],
+            'DELETE_DOCUMENT',
+            'Moved document to archive: ' . $document->file_name,
+            'DocumentController',
+            'delete',
+            $documentData,
+            ['status' => 0],
+            'success'
+        );
+        
+        $_SESSION['success'] = 'Document moved to archive';
+    } else {
+        $_SESSION['error'] = 'Failed to move document to archive';
+    }
+    
+    $this->redirect('index.php?controller=document&action=index');
+}
 
         // Restore document
         public function restore() {
@@ -437,6 +461,108 @@ public function securePreview() {
         die("Document not found or access denied.");
     }
 }
+
+
+
+// Archive - Show deleted documents
+public function archive() {
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
+    $offset = ($page - 1) * $limit;
+    
+    $filters = [];
+    if(!empty($_GET['search'])) $filters['search'] = $_GET['search'];
+    if(!empty($_GET['document_type'])) $filters['document_type'] = $_GET['document_type'];
+    
+    $document = new Document();
+    $documents = $document->getAllDocumentsWithInactive($filters, $limit, $offset);
+    $totalDocuments = $document->countArchivedDocuments($filters);
+    $totalPages = ceil($totalDocuments / $limit);
+    
+    // Get statistics by document type for archived documents
+    $stats = $document->countByType();
+    
+    // Get all document types for filter
+    $documentTypes = $document->getDocumentTypes();
+    
+    $data = [
+        'documents' => $documents,
+        'stats' => $stats,
+        'total_documents' => $totalDocuments,
+        'current_page' => $page,
+        'total_pages' => $totalPages,
+        'limit' => $limit,
+        'filters' => $filters,
+        'documentTypes' => $documentTypes,
+        'title' => 'Document Archive'
+    ];
+    
+    $this->render('document/archive.php', $data);
+}
+
+// Permanent delete from archive
+public function permanentDelete() {
+    $id = $_GET['id'] ?? 0;
+    
+    $document = new Document();
+    $document->getDocumentById($id);
+    $documentData = [
+        'id' => $document->id,
+        'file_name' => $document->file_name
+    ];
+    
+    if($document->permanentDelete($id)) {
+        // Log activity
+        $this->activityLog->log(
+            $_SESSION['user_id'],
+            $_SESSION['user_username'],
+            'PERMANENT_DELETE_DOCUMENT',
+            'Permanently deleted document: ' . $document->file_name,
+            'DocumentController',
+            'permanentDelete',
+            $documentData,
+            null,
+            'success'
+        );
+        
+        $_SESSION['success'] = 'Document permanently deleted from archive';
+    } else {
+        $_SESSION['error'] = 'Failed to delete document';
+    }
+    
+    $this->redirect('index.php?controller=document&action=archive');
+}
+
+// Restore document from archive
+public function restoreFromArchive() {
+    $id = $_GET['id'] ?? 0;
+    
+    $document = new Document();
+    $document->getDocumentById($id);
+    
+    if($document->restoreFromArchive($id)) {
+        // Log activity
+        $this->activityLog->log(
+            $_SESSION['user_id'],
+            $_SESSION['user_username'],
+            'RESTORE_FROM_ARCHIVE',
+            'Restored document from archive: ' . $document->file_name,
+            'DocumentController',
+            'restoreFromArchive',
+            null,
+            ['status' => 1],
+            'success'
+        );
+        
+        $_SESSION['success'] = 'Document restored from archive successfully';
+    } else {
+        $_SESSION['error'] = 'Failed to restore document';
+    }
+    
+    $this->redirect('index.php?controller=document&action=archive');
+}
+
+
     }    
 }
 ?>

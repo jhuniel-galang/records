@@ -1,8 +1,13 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Document Management</h2>
-    <a href="index.php?controller=document&action=upload" class="btn btn-primary">
-        <i class="bi bi-cloud-upload"></i> Upload Document
-    </a>
+    <div>
+        <a href="index.php?controller=document&action=archive" class="btn btn-secondary me-2">
+            <i class="bi bi-archive"></i> Archive
+        </a>
+        <a href="index.php?controller=document&action=upload" class="btn btn-primary">
+            <i class="bi bi-cloud-upload"></i> Upload Document
+        </a>
+    </div>
 </div>
 
 <!-- Statistics Cards -->
@@ -67,26 +72,16 @@
                                    class="btn btn-sm btn-info" title="View">
                                     <i class="bi bi-eye"></i>
                                 </a>
-
                                 <a href="index.php?controller=document&action=edit&id=<?php echo $doc['id']; ?>" 
                                    class="btn btn-sm btn-warning" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <?php if($doc['status'] == 1): ?>
-                                    <a href="index.php?controller=document&action=delete&id=<?php echo $doc['id']; ?>" 
-                                       class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Are you sure you want to delete this document?')"
-                                       title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                <?php else: ?>
-                                    <a href="index.php?controller=document&action=restore&id=<?php echo $doc['id']; ?>" 
-                                       class="btn btn-sm btn-secondary" 
-                                       onclick="return confirm('Restore this document?')"
-                                       title="Restore">
-                                        <i class="bi bi-arrow-counterclockwise"></i>
-                                    </a>
-                                <?php endif; ?>
+                                <a href="index.php?controller=document&action=delete&id=<?php echo $doc['id']; ?>" 
+                                   class="btn btn-sm btn-danger" 
+                                   onclick="return confirm('Move this document to archive?')"
+                                   title="Move to Archive">
+                                    <i class="bi bi-archive"></i>
+                                </a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
