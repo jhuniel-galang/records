@@ -42,107 +42,106 @@ class School {
         }
     }
 
-    // Get single school by ID
     public function getSchoolById($id) {
-        try {
-            $query = "SELECT s.*, u.username as creator_name 
-                      FROM " . $this->table . " s
-                      LEFT JOIN users u ON s.created_by = u.id
-                      WHERE s.id = :id LIMIT 1";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->execute();
-            
-            if($stmt->rowCount() > 0) {
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                $this->id = $row['id'];
-                $this->school_name = $row['school_name'];
-                $this->level = $row['level'];
-                $this->address = $row['address'];
-                $this->principal_name = $row['principal_name'];
-                $this->created_at = $row['created_at'];
-                $this->updated_at = $row['updated_at'];
-                $this->created_by = $row['created_by'];
-                $this->status = $row['status'];
-                return true;
-            }
-            return false;
-        } catch (PDOException $e) {
-            error_log("School getSchoolById Error: " . $e->getMessage());
-            return false;
+    try {
+        $query = "SELECT s.*, u.username as creator_name, ot.type_name as office_type_name 
+                  FROM " . $this->table . " s
+                  LEFT JOIN users u ON s.created_by = u.id
+                  LEFT JOIN office_types ot ON s.office_type_id = ot.id
+                  WHERE s.id = :id LIMIT 1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        
+        if($stmt->rowCount() > 0) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->id = $row['id'];
+            $this->school_name = $row['school_name'];
+            $this->office_type_id = $row['office_type_id'];
+            $this->office_type_name = $row['office_type_name'];
+            $this->address = $row['address'];
+            $this->principal_name = $row['principal_name'];
+            $this->created_at = $row['created_at'];
+            $this->updated_at = $row['updated_at'];
+            $this->created_by = $row['created_by'];
+            $this->status = $row['status'];
+            return true;
         }
+        return false;
+    } catch (PDOException $e) {
+        error_log("School getSchoolById Error: " . $e->getMessage());
+        return false;
     }
+}
 
     // Create new school
-    public function create() {
-        try {
-            $query = "INSERT INTO " . $this->table . " 
-                      SET school_name = :school_name,
-                          level = :level,
-                          address = :address,
-                          principal_name = :principal_name,
-                          created_by = :created_by,
-                          status = :status";
-            
-            $stmt = $this->conn->prepare($query);
-            
-            // Sanitize inputs
-            $this->school_name = htmlspecialchars(strip_tags($this->school_name));
-            $this->level = htmlspecialchars(strip_tags($this->level));
-            $this->address = htmlspecialchars(strip_tags($this->address));
-            $this->principal_name = htmlspecialchars(strip_tags($this->principal_name));
-            $this->status = htmlspecialchars(strip_tags($this->status));
-            
-            $stmt->bindParam(':school_name', $this->school_name);
-            $stmt->bindParam(':level', $this->level);
-            $stmt->bindParam(':address', $this->address);
-            $stmt->bindParam(':principal_name', $this->principal_name);
-            $stmt->bindParam(':created_by', $this->created_by);
-            $stmt->bindParam(':status', $this->status);
-            
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("School create Error: " . $e->getMessage());
-            return false;
-        }
+public function create() {
+    try {
+        $query = "INSERT INTO " . $this->table . " 
+                  SET school_name = :school_name,
+                      office_type_id = :office_type_id,
+                      address = :address,
+                      principal_name = :principal_name,
+                      created_by = :created_by,
+                      status = :status";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Sanitize inputs
+        $this->school_name = htmlspecialchars(strip_tags($this->school_name));
+        $this->address = htmlspecialchars(strip_tags($this->address));
+        $this->principal_name = htmlspecialchars(strip_tags($this->principal_name));
+        $this->status = htmlspecialchars(strip_tags($this->status));
+        
+        $stmt->bindParam(':school_name', $this->school_name);
+        $stmt->bindParam(':office_type_id', $this->office_type_id);
+        $stmt->bindParam(':address', $this->address);
+        $stmt->bindParam(':principal_name', $this->principal_name);
+        $stmt->bindParam(':created_by', $this->created_by);
+        $stmt->bindParam(':status', $this->status);
+        
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("School create Error: " . $e->getMessage());
+        return false;
     }
+}
 
-    // Update school
-    public function update() {
-        try {
-            $query = "UPDATE " . $this->table . " 
-                      SET school_name = :school_name,
-                          level = :level,
-                          address = :address,
-                          principal_name = :principal_name,
-                          status = :status,
-                          updated_at = NOW()
-                      WHERE id = :id";
-            
-            $stmt = $this->conn->prepare($query);
-            
-            // Sanitize inputs
-            $this->school_name = htmlspecialchars(strip_tags($this->school_name));
-            $this->level = htmlspecialchars(strip_tags($this->level));
-            $this->address = htmlspecialchars(strip_tags($this->address));
-            $this->principal_name = htmlspecialchars(strip_tags($this->principal_name));
-            $this->status = htmlspecialchars(strip_tags($this->status));
-            $this->id = htmlspecialchars(strip_tags($this->id));
-            
-            $stmt->bindParam(':school_name', $this->school_name);
-            $stmt->bindParam(':level', $this->level);
-            $stmt->bindParam(':address', $this->address);
-            $stmt->bindParam(':principal_name', $this->principal_name);
-            $stmt->bindParam(':status', $this->status);
-            $stmt->bindParam(':id', $this->id);
-            
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("School update Error: " . $e->getMessage());
-            return false;
-        }
+// Update school
+public function update() {
+    try {
+        $query = "UPDATE " . $this->table . " 
+                  SET school_name = :school_name,
+                      office_type_id = :office_type_id,
+                      address = :address,
+                      principal_name = :principal_name,
+                      status = :status,
+                      updated_at = NOW()
+                  WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Sanitize inputs
+        $this->school_name = htmlspecialchars(strip_tags($this->school_name));
+        $this->address = htmlspecialchars(strip_tags($this->address));
+        $this->principal_name = htmlspecialchars(strip_tags($this->principal_name));
+        $this->status = htmlspecialchars(strip_tags($this->status));
+        $this->id = htmlspecialchars(strip_tags($this->id));
+        
+        $stmt->bindParam(':school_name', $this->school_name);
+        $stmt->bindParam(':office_type_id', $this->office_type_id);
+        $stmt->bindParam(':address', $this->address);
+        $stmt->bindParam(':principal_name', $this->principal_name);
+        $stmt->bindParam(':status', $this->status);
+        $stmt->bindParam(':id', $this->id);
+        
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("School update Error: " . $e->getMessage());
+        return false;
     }
+}
 
     // Delete school (soft delete)
     public function delete($id) {
@@ -223,22 +222,23 @@ class School {
     // Get all schools with pagination, filtering, and sorting
 public function getAllSchoolsPaginated($limit, $offset, $filters = [], $sort_by = 'school_name', $sort_order = 'ASC') {
     try {
-        $query = "SELECT s.*, u.username as creator_name 
+        $query = "SELECT s.*, u.username as creator_name, ot.type_name as office_type_name 
                   FROM " . $this->table . " s
                   LEFT JOIN users u ON s.created_by = u.id
+                  LEFT JOIN office_types ot ON s.office_type_id = ot.id
                   WHERE 1=1";
         $params = [];
         
         // Apply filters
         if(!empty($filters['search'])) {
             $search = '%' . $filters['search'] . '%';
-            $query .= " AND (s.school_name LIKE :search OR s.address LIKE :search OR s.principal_name LIKE :search)";
+            $query .= " AND (s.school_name LIKE :search OR s.address LIKE :search)";
             $params[':search'] = $search;
         }
         
-        if(!empty($filters['level'])) {
-            $query .= " AND s.level = :level";
-            $params[':level'] = $filters['level'];
+        if(!empty($filters['office_type_id'])) {
+            $query .= " AND s.office_type_id = :office_type_id";
+            $params[':office_type_id'] = $filters['office_type_id'];
         }
         
         if(isset($filters['status']) && $filters['status'] !== '') {
@@ -251,16 +251,10 @@ public function getAllSchoolsPaginated($limit, $offset, $filters = [], $sort_by 
             $params[':created_by'] = $filters['created_by'];
         }
         
-        // Allowed sort columns
-        $allowed_sort = ['id', 'school_name', 'level', 'address', 'principal_name', 'status', 'created_at'];
-        $sort_by = in_array($sort_by, $allowed_sort) ? $sort_by : 'school_name';
-        $sort_order = $sort_order == 'ASC' ? 'ASC' : 'DESC';
-        
         $query .= " ORDER BY " . $sort_by . " " . $sort_order . " LIMIT :limit OFFSET :offset";
         
         $stmt = $this->conn->prepare($query);
         
-        // Bind parameters
         foreach($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
@@ -270,7 +264,6 @@ public function getAllSchoolsPaginated($limit, $offset, $filters = [], $sort_by 
         
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
     } catch (PDOException $e) {
         error_log("School getAllSchoolsPaginated Error: " . $e->getMessage());
         return [];
@@ -329,6 +322,61 @@ public function getAllCreators() {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         error_log("School getAllCreators Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Get schools by office type
+public function getSchoolsByOfficeType($office_type_id) {
+    try {
+        $query = "SELECT s.*, u.username as creator_name, ot.type_name as office_type_name
+                  FROM " . $this->table . " s
+                  LEFT JOIN users u ON s.created_by = u.id
+                  LEFT JOIN office_types ot ON s.office_type_id = ot.id
+                  WHERE s.office_type_id = :office_type_id AND s.status = 1
+                  ORDER BY s.school_name ASC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':office_type_id', $office_type_id);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("School getSchoolsByOfficeType Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Get schools with office type info
+public function getAllSchoolsWithOfficeType() {
+    try {
+        $query = "SELECT s.*, u.username as creator_name, ot.type_name as office_type_name
+                  FROM " . $this->table . " s
+                  LEFT JOIN users u ON s.created_by = u.id
+                  LEFT JOIN office_types ot ON s.office_type_id = ot.id
+                  WHERE s.status = 1
+                  ORDER BY ot.type_name, s.school_name ASC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("School getAllSchoolsWithOfficeType Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+public function countByOfficeType() {
+    try {
+        $query = "SELECT ot.type_name as office_type, COUNT(s.id) as total 
+                  FROM " . $this->table . " s
+                  LEFT JOIN office_types ot ON s.office_type_id = ot.id
+                  WHERE s.status = 1
+                  GROUP BY ot.type_name";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("School countByOfficeType Error: " . $e->getMessage());
         return [];
     }
 }

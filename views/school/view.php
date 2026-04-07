@@ -17,13 +17,13 @@
                 <td><?php echo htmlspecialchars($school->school_name); ?></td>
             </tr>
             <tr>
-                <th>Level</th>
-                <td>
-                    <span class="badge <?php echo $school->level == 'Elementary' ? 'bg-success' : 'bg-warning'; ?>">
-                        <?php echo $school->level; ?>
-                    </span>
-                </td>
-            </tr>
+    <th>Office Type</th>
+    <td>
+        <span class="badge bg-info">
+            <?php echo htmlspecialchars($school->office_type_name ?? 'N/A'); ?>
+        </span>
+    </td>
+</tr>
             <tr>
                 <th>Address</th>
                 <td><?php echo nl2br(htmlspecialchars($school->address)); ?></td>

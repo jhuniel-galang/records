@@ -19,13 +19,14 @@ class Document {
     public $uploader_at;
     public $delete_at;
     public $status;
+    public $office_type_id;
 
     public function __construct() {
         $database = new Database();
         $this->conn = $database->getConnection();
     }
 
-    // Upload a new document
+   // Upload a new document
 public function upload() {
     try {
         $query = "INSERT INTO " . $this->table . " 
@@ -62,7 +63,6 @@ public function upload() {
         return false;
     }
 }
-
     // Get all documents
     public function getAllDocuments($includeInactive = false) {
         try {
@@ -121,7 +121,7 @@ public function upload() {
         }
     }
 
-   // Get single document by ID
+  // Get single document by ID
 public function getDocumentById($id) {
     try {
         $query = "SELECT d.*, u.username as uploader_name 
@@ -138,6 +138,7 @@ public function getDocumentById($id) {
             $this->id = $row['id'];
             $this->user_id = $row['user_id'];
             $this->school_name = $row['school_name'];
+            $this->office_type_id = $row['office_type_id'];  // Add this line
             $this->file_name = $row['file_name'];
             $this->doc_title = $row['doc_title'];
             $this->doc_year = $row['doc_year'];
@@ -154,15 +155,16 @@ public function getDocumentById($id) {
         return false;
     } catch (PDOException $e) {
         error_log("Document getDocumentById Error: " . $e->getMessage());
-            return false;
-        }
+        return false;
+    }
 }
 
-   // Update document
+  // Update document
 public function update() {
     try {
         $query = "UPDATE " . $this->table . " 
                   SET school_name = :school_name,
+                      office_type_id = :office_type_id,
                       doc_title = :doc_title,
                       doc_year = :doc_year,
                       remarks = :remarks,
@@ -172,6 +174,7 @@ public function update() {
         $stmt = $this->conn->prepare($query);
         
         $stmt->bindParam(':school_name', $this->school_name);
+        $stmt->bindParam(':office_type_id', $this->office_type_id);
         $stmt->bindParam(':doc_title', $this->doc_title);
         $stmt->bindParam(':doc_year', $this->doc_year);
         $stmt->bindParam(':remarks', $this->remarks);

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../controllers/BaseController.php';
 require_once __DIR__ . '/../models/School.php';
 require_once __DIR__ . '/../models/ActivityLog.php';
+require_once __DIR__ . '/../models/OfficeType.php';
 
 if (!class_exists('SchoolController')) {
     class SchoolController extends BaseController {
@@ -20,69 +21,63 @@ if (!class_exists('SchoolController')) {
         }
 
         // List all schools with pagination and filtering
-public function index() {
-    // Pagination settings
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-    $offset = ($page - 1) * $limit;
-    
-    // Sorting settings
-    $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'school_name';
-    $sort_order = isset($_GET['order']) && in_array($_GET['order'], ['ASC', 'DESC']) ? $_GET['order'] : 'ASC';
-    
-    // Build filters from GET parameters
-    $filters = [];
-    if(!empty($_GET['search'])) {
-        $filters['search'] = $_GET['search'];
-    }
-    if(!empty($_GET['level'])) {
-        $filters['level'] = $_GET['level'];
-    }
-    if(isset($_GET['status']) && $_GET['status'] !== '') {
-        $filters['status'] = $_GET['status'];
-    }
-    if(!empty($_GET['created_by'])) {
-        $filters['created_by'] = $_GET['created_by'];
-    }
-    
-    $school = new School();
-    $schools = $school->getAllSchoolsPaginated($limit, $offset, $filters, $sort_by, $sort_order);
-    $totalSchools = $school->countSchools($filters);
-    $totalPages = ceil($totalSchools / $limit);
-    
-    // Get statistics
-    $stats = $school->countByLevel();
-    $elementaryCount = 0;
-    $hsCount = 0;
-    
-    foreach ($stats as $stat) {
-        if ($stat['level'] == 'Elementary') {
-            $elementaryCount = $stat['total'];
-        } else if ($stat['level'] == 'HS') {
-            $hsCount = $stat['total'];
+        public function index() {
+            // Pagination settings
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $offset = ($page - 1) * $limit;
+            
+            // Sorting settings
+            $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'school_name';
+            $sort_order = isset($_GET['order']) && in_array($_GET['order'], ['ASC', 'DESC']) ? $_GET['order'] : 'ASC';
+            
+            // Build filters from GET parameters
+            $filters = [];
+            if(!empty($_GET['search'])) {
+                $filters['search'] = $_GET['search'];
+            }
+            if(!empty($_GET['office_type_id'])) {
+                $filters['office_type_id'] = $_GET['office_type_id'];
+            }
+            if(isset($_GET['status']) && $_GET['status'] !== '') {
+                $filters['status'] = $_GET['status'];
+            }
+            if(!empty($_GET['created_by'])) {
+                $filters['created_by'] = $_GET['created_by'];
+            }
+            
+            $school = new School();
+            $schools = $school->getAllSchoolsPaginated($limit, $offset, $filters, $sort_by, $sort_order);
+            $totalSchools = $school->countSchools($filters);
+            $totalPages = ceil($totalSchools / $limit);
+            
+            // Get statistics by office type
+            $stats = $school->countByOfficeType();
+            
+            // Get all creators for filter dropdown
+            $creators = $school->getAllCreators();
+            
+            // Get office types for filter dropdown
+            $officeType = new OfficeType();
+            $officeTypes = $officeType->getActiveTypes();
+            
+            $data = [
+                'schools' => $schools,
+                'stats' => $stats,
+                'officeTypes' => $officeTypes,
+                'total_schools' => $totalSchools,
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'limit' => $limit,
+                'filters' => $filters,
+                'sort_by' => $sort_by,
+                'sort_order' => $sort_order,
+                'creators' => $creators,
+                'title' => 'School Management'
+            ];
+            
+            $this->render('school/index.php', $data);
         }
-    }
-    
-    // Get all creators for filter dropdown
-    $creators = $school->getAllCreators();
-    
-    $data = [
-        'schools' => $schools,
-        'elementary_count' => $elementaryCount,
-        'hs_count' => $hsCount,
-        'total_schools' => $totalSchools,
-        'current_page' => $page,
-        'total_pages' => $totalPages,
-        'limit' => $limit,
-        'filters' => $filters,
-        'sort_by' => $sort_by,
-        'sort_order' => $sort_order,
-        'creators' => $creators,
-        'title' => 'School Management'
-    ];
-    
-    $this->render('school/index.php', $data);
-}
 
         // View single school
         public function view() {
@@ -101,20 +96,24 @@ public function index() {
             }
         }
 
-        // Show create form
         public function create() {
+            // Get office types for dropdown
+            $officeType = new OfficeType();
+            $officeTypes = $officeType->getActiveTypes();
+            
             $data = [
+                'officeTypes' => $officeTypes,
                 'title' => 'Add New School'
             ];
             $this->render('school/create.php', $data);
         }
-
+        
         // Store new school
         public function store() {
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $school = new School();
                 $school->school_name = $_POST['school_name'];
-                $school->level = $_POST['level'];
+                $school->office_type_id = $_POST['office_type_id'];
                 $school->address = $_POST['address'];
                 $school->principal_name = $_POST['principal_name'];
                 $school->created_by = $_SESSION['user_id'];
@@ -124,14 +123,13 @@ public function index() {
                 if (!$school->schoolNameExists($school->school_name)) {
                     $newData = [
                         'school_name' => $school->school_name,
-                        'level' => $school->level,
+                        'office_type_id' => $school->office_type_id,
                         'address' => $school->address,
                         'principal_name' => $school->principal_name,
                         'status' => $school->status
                     ];
 
                     if ($school->create()) {
-                        
                         // Log activity
                         $this->activityLog->log(
                             $_SESSION['user_id'],
@@ -158,14 +156,18 @@ public function index() {
             }
         }
 
-        // Show edit form
         public function edit() {
             $id = $_GET['id'] ?? 0;
             
             $school = new School();
             if($school->getSchoolById($id)) {
+                // Get office types for dropdown
+                $officeType = new OfficeType();
+                $officeTypes = $officeType->getActiveTypes();
+                
                 $data = [
                     'school' => $school,
+                    'officeTypes' => $officeTypes,
                     'title' => 'Edit School'
                 ];
                 $this->render('school/edit.php', $data);
@@ -184,7 +186,7 @@ public function index() {
                 $school->getSchoolById($_POST['id']);
                 $oldData = [
                     'school_name' => $school->school_name,
-                    'level' => $school->level,
+                    'office_type_id' => $school->office_type_id,
                     'address' => $school->address,
                     'principal_name' => $school->principal_name,
                     'status' => $school->status
@@ -192,14 +194,14 @@ public function index() {
                 
                 $school->id = $_POST['id'];
                 $school->school_name = $_POST['school_name'];
-                $school->level = $_POST['level'];
+                $school->office_type_id = $_POST['office_type_id'];
                 $school->address = $_POST['address'];
                 $school->principal_name = $_POST['principal_name'];
                 $school->status = $_POST['status'] ?? 1;
                 
                 $newData = [
                     'school_name' => $school->school_name,
-                    'level' => $school->level,
+                    'office_type_id' => $school->office_type_id,
                     'address' => $school->address,
                     'principal_name' => $school->principal_name,
                     'status' => $school->status
@@ -242,7 +244,7 @@ public function index() {
             $schoolData = [
                 'id' => $school->id,
                 'school_name' => $school->school_name,
-                'level' => $school->level
+                'office_type_id' => $school->office_type_id
             ];
             
             if($school->delete($id)) {
@@ -276,7 +278,7 @@ public function index() {
             $schoolData = [
                 'id' => $school->id,
                 'school_name' => $school->school_name,
-                'level' => $school->level
+                'office_type_id' => $school->office_type_id
             ];
             
             if($school->activate($id)) {
@@ -299,26 +301,6 @@ public function index() {
             }
             
             $this->redirect('index.php?controller=school&action=index');
-        }
-
-        // View schools by level
-        public function byLevel() {
-            $level = $_GET['level'] ?? '';
-            
-            if (!in_array($level, ['Elementary', 'HS'])) {
-                $this->redirect('index.php?controller=school&action=index');
-            }
-            
-            $school = new School();
-            $schools = $school->getSchoolsByLevel($level);
-            
-            $data = [
-                'schools' => $schools,
-                'level' => $level,
-                'title' => $level . ' Schools'
-            ];
-            
-            $this->render('school/by_level.php', $data);
         }
     }
 }

@@ -7,16 +7,19 @@
         <form method="POST" action="index.php?controller=school&action=store">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="school_name" class="form-label">School Name *</label>
+                    <label for="school_name" class="form-label">School/Office Name *</label>
                     <input type="text" class="form-control" id="school_name" name="school_name" required>
                 </div>
                 
                 <div class="col-md-6 mb-3">
-                    <label for="level" class="form-label">Level *</label>
-                    <select class="form-control" id="level" name="level" required>
-                        <option value="">Select Level</option>
-                        <option value="Elementary">Elementary</option>
-                        <option value="HS">High School (HS)</option>
+                    <label for="office_type_id" class="form-label">Office Type *</label>
+                    <select class="form-control" id="office_type_id" name="office_type_id" required>
+                        <option value="">Select Office Type</option>
+                        <?php foreach($officeTypes as $type): ?>
+                            <option value="<?php echo $type['id']; ?>">
+                                <?php echo htmlspecialchars($type['type_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 
@@ -26,7 +29,7 @@
                 </div>
                 
                 <div class="col-md-6 mb-3">
-                    <label for="principal_name" class="form-label">Principal Name *</label>
+                    <label for="principal_name" class="form-label">Head/Principal Name *</label>
                     <input type="text" class="form-control" id="principal_name" name="principal_name" required>
                 </div>
                 
@@ -39,7 +42,7 @@
                 </div>
                 
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Create School</button>
+                    <button type="submit" class="btn btn-primary">Create School/Office</button>
                     <a href="index.php?controller=school&action=index" class="btn btn-secondary">Cancel</a>
                 </div>
             </div>

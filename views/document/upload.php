@@ -11,11 +11,12 @@
                     <input type="file" class="form-control" id="document" name="document" required>
                     <small class="text-muted">Allowed types: PDF, Images (JPG, PNG, GIF), DOC, DOCX, XLS, XLSX. Max size: 10MB</small>
                 </div>
-                <!-- Add this near the file input field -->
-<div id="duplicate-warning" class="alert alert-warning" style="display: none;">
-    <i class="bi bi-exclamation-triangle"></i> 
-    <span id="duplicate-message"></span>
-</div>
+                
+                <!-- Duplicate warning -->
+                <div id="duplicate-warning" class="alert alert-warning" style="display: none;">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <span id="duplicate-message"></span>
+                </div>
                 
                 <div class="col-md-6 mb-3">
                     <label for="doc_title" class="form-label">Document Title *</label>
@@ -33,16 +34,20 @@
                     </select>
                 </div>
                 
+                <!-- School Selection -->
                 <div class="col-md-6 mb-3">
-                    <label for="school_name" class="form-label">School *</label>
+                    <label for="school_name" class="form-label">School/Office *</label>
                     <select class="form-control" id="school_name" name="school_name" required>
-                        <option value="">Select School</option>
+                        <option value="">Select School/Office</option>
                         <?php foreach($schools as $school): ?>
-                            <option value="<?php echo htmlspecialchars($school['school_name']); ?>">
+                            <option value="<?php echo htmlspecialchars($school['school_name']); ?>"
+                                    data-office-type="<?php echo htmlspecialchars($school['office_type_name'] ?? ''); ?>">
+                                [<?php echo htmlspecialchars($school['office_type_name'] ?? 'N/A'); ?>] 
                                 <?php echo htmlspecialchars($school['school_name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <small class="text-muted">Select the school or office this document belongs to</small>
                 </div>
                 
                 <div class="col-md-6 mb-3">
@@ -66,23 +71,13 @@
                     <button type="submit" class="btn btn-primary">Upload Document</button>
                     <a href="index.php?controller=document&action=index" class="btn btn-secondary">Cancel</a>
                 </div>
-                
             </div>
         </form>
     </div>
 </div>
 
-
-
-
-
-
-
-
-
-
 <script>
-    // Real-time duplicate title checking (optional)
+    // Real-time duplicate title checking
     let checkTimeout;
     
     document.getElementById('doc_title').addEventListener('input', function() {
@@ -96,7 +91,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.duplicate) {
-                            const errorDiv = document.getElementById('title-error');
+                            let errorDiv = document.getElementById('title-error');
                             if (!errorDiv) {
                                 const div = document.createElement('div');
                                 div.id = 'title-error';

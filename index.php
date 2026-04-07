@@ -22,7 +22,8 @@ $controllerMap = [
     'school' => 'SchoolController',
     'document' => 'DocumentController',
     'documenttype' => 'DocumentTypeController',
-    'form137' => 'Form137Controller'  // Add this line
+    'form137' => 'Form137Controller',
+    'officetype' => 'OfficeTypeController'
 ];
 
 if (array_key_exists($controller, $controllerMap)) {

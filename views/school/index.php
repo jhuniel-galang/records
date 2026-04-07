@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>School Management</h2>
     <a href="index.php?controller=school&action=create" class="btn btn-primary">
-         Add New School
+        + Add New School
     </a>
 </div>
 
@@ -23,11 +23,15 @@
             </div>
             
             <div class="col-md-2">
-                <label for="level" class="form-label">Level</label>
-                <select class="form-select" id="level" name="level">
-                    <option value="">All Levels</option>
-                    <option value="Elementary" <?php echo ($filters['level'] ?? '') == 'Elementary' ? 'selected' : ''; ?>>Elementary</option>
-                    <option value="HS" <?php echo ($filters['level'] ?? '') == 'HS' ? 'selected' : ''; ?>>High School (HS)</option>
+                <label for="office_type_id" class="form-label">Office Type</label>
+                <select class="form-select" id="office_type_id" name="office_type_id">
+                    <option value="">All Office Types</option>
+                    <?php foreach($officeTypes as $type): ?>
+                        <option value="<?php echo $type['id']; ?>" 
+                            <?php echo ($filters['office_type_id'] ?? '') == $type['id'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($type['type_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             
@@ -72,21 +76,19 @@
     <div class="col-md-4">
         <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="stats-number"><?php echo number_format((int)$total_schools); ?></div>
-            <div class="stats-label">Total Schools</div>
+            <div class="stats-label">Total Offices/Schools</div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-            <div class="stats-number"><?php echo number_format((int)$elementary_count); ?></div>
-            <div class="stats-label">Elementary Schools</div>
+    <?php if(!empty($stats)): ?>
+        <?php foreach($stats as $stat): ?>
+        <div class="col-md-4">
+            <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="stats-number"><?php echo number_format($stat['total']); ?></div>
+                <div class="stats-label"><?php echo htmlspecialchars($stat['office_type']); ?></div>
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="stats-card" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
-            <div class="stats-number"><?php echo number_format((int)$hs_count); ?></div>
-            <div class="stats-label">High Schools</div>
-        </div>
-    </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </div>
 
 <!-- Schools Table -->
@@ -116,15 +118,15 @@
                             </a>
                         </th>
                         <th>
-                            <a href="?controller=school&action=index&sort=level&order=<?php echo $sort_order == 'ASC' ? 'DESC' : 'ASC'; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>" class="text-decoration-none text-dark">
-                                Level
-                                <?php if($sort_by == 'level'): ?>
+                            <a href="?controller=school&action=index&sort=office_type_name&order=<?php echo $sort_order == 'ASC' ? 'DESC' : 'ASC'; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>" class="text-decoration-none text-dark">
+                                Office Type
+                                <?php if($sort_by == 'office_type_name'): ?>
                                     <?php echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
                                 <?php endif; ?>
                             </a>
                         </th>
                         <th>Address</th>
-                        <th>Principal</th>
+                        <th>Head/Principal</th>
                         <th>Created By</th>
                         <th>
                             <a href="?controller=school&action=index&sort=status&order=<?php echo $sort_order == 'ASC' ? 'DESC' : 'ASC'; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>" class="text-decoration-none text-dark">
@@ -144,9 +146,7 @@
                             <td><?php echo $school['id']; ?></td>
                             <td><?php echo htmlspecialchars($school['school_name']); ?></td>
                             <td>
-                                <span class="badge <?php echo $school['level'] == 'Elementary' ? 'bg-success' : 'bg-warning'; ?>">
-                                    <?php echo $school['level']; ?>
-                                </span>
+                                <span class="badge bg-info"><?php echo htmlspecialchars($school['office_type_name'] ?? 'N/A'); ?></span>
                             </td>
                             <td><?php echo htmlspecialchars($school['address']); ?></td>
                             <td><?php echo htmlspecialchars($school['principal_name']); ?></td>
@@ -166,12 +166,12 @@
                                 <?php if($school['status'] == 1): ?>
                                     <a href="index.php?controller=school&action=delete&id=<?php echo $school['id']; ?>" 
                                        class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Are you sure you want to deactivate this school?')"
+                                       onclick="return confirm('Are you sure you want to deactivate this school/office?')"
                                        title="Deactivate">Deactivate</a>
                                 <?php else: ?>
                                     <a href="index.php?controller=school&action=activate&id=<?php echo $school['id']; ?>" 
                                        class="btn btn-sm btn-success" 
-                                       onclick="return confirm('Are you sure you want to activate this school?')"
+                                       onclick="return confirm('Are you sure you want to activate this school/office?')"
                                        title="Activate">Activate</a>
                                 <?php endif; ?>
                             </td>
@@ -179,7 +179,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center">No schools found</td>
+                            <td colspan="8" class="text-center">No schools/offices found</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

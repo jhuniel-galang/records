@@ -3,6 +3,7 @@ require_once __DIR__ . '/../controllers/BaseController.php';
 require_once __DIR__ . '/../models/Document.php';
 require_once __DIR__ . '/../models/School.php';
 require_once __DIR__ . '/../models/ActivityLog.php';
+require_once __DIR__ . '/../models/OfficeType.php';
 
 if (!class_exists('DocumentController')) {
     class DocumentController extends BaseController {
@@ -48,11 +49,10 @@ if (!class_exists('DocumentController')) {
         }
 
         // Show upload form
-        // Show upload form
 public function upload() {
-    // Get schools for dropdown
+    // Get schools grouped with office type info
     $school = new School();
-    $schools = $school->getAllSchools();
+    $schools = $school->getAllSchoolsWithOfficeType();
     
     // Get document types from database
     $document = new Document();
