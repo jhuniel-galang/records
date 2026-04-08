@@ -33,6 +33,19 @@ $action = $_GET['action'] ?? 'index';
                            href="index.php?controller=document&action=upload">Upload Document</a></li>
                 </ul>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link <?php echo in_array($current_page, ['school']) ? 'active' : ''; ?>" 
+                   href="#schoolsSubmenu" data-bs-toggle="collapse" aria-expanded="<?php echo in_array($current_page, ['school']) ? 'true' : 'false'; ?>">
+                    <i class="bi bi-building"></i> Schools <span class="float-end">▼</span>
+                </a>
+                <ul class="collapse <?php echo in_array($current_page, ['school']) ? 'show' : ''; ?> list-unstyled" id="schoolsSubmenu">
+                    <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'index' ? 'active' : ''; ?>" 
+                           href="index.php?controller=school&action=index">View Schools</a></li>
+                    <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'create' ? 'active' : ''; ?>" 
+                           href="index.php?controller=school&action=create">Add School</a></li>
+                </ul>
+            </li>
             
             <?php if($_SESSION['user_role'] == 'admin'): ?>
             <li class="nav-item">
@@ -62,18 +75,7 @@ $action = $_GET['action'] ?? 'index';
 
             
             
-            <li class="nav-item">
-                <a class="nav-link <?php echo in_array($current_page, ['school']) ? 'active' : ''; ?>" 
-                   href="#schoolsSubmenu" data-bs-toggle="collapse" aria-expanded="<?php echo in_array($current_page, ['school']) ? 'true' : 'false'; ?>">
-                    <i class="bi bi-building"></i> Schools <span class="float-end">▼</span>
-                </a>
-                <ul class="collapse <?php echo in_array($current_page, ['school']) ? 'show' : ''; ?> list-unstyled" id="schoolsSubmenu">
-                    <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'index' ? 'active' : ''; ?>" 
-                           href="index.php?controller=school&action=index">View Schools</a></li>
-                    <li><a class="nav-link ps-4 <?php echo $current_page == 'school' && $action == 'create' ? 'active' : ''; ?>" 
-                           href="index.php?controller=school&action=create">Add School</a></li>
-                </ul>
-            </li>
+            
             
             
 
@@ -85,6 +87,8 @@ $action = $_GET['action'] ?? 'index';
     </a>
 </li>
 <?php endif; ?>
+
+
             
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=auth&action=logout">

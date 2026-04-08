@@ -680,5 +680,158 @@ public function checkFileHashDuplicate($file_hash, $exclude_id = null) {
         return false;
     }
 }
+
+
+
+// Get document type statistics with filters
+public function getDocumentTypeStats($filters = []) {
+    try {
+        $query = "SELECT document_type, COUNT(*) as total, SUM(file_size) as total_size 
+                  FROM " . $this->table . " 
+                  WHERE status = 1";
+        $params = [];
+        
+        if(!empty($filters['doc_year'])) {
+            $query .= " AND doc_year = :doc_year";
+            $params[':doc_year'] = $filters['doc_year'];
+        }
+        
+        if(!empty($filters['office_type_id'])) {
+            $query .= " AND office_type_id = :office_type_id";
+            $params[':office_type_id'] = $filters['office_type_id'];
+        }
+        
+        if(!empty($filters['school_id'])) {
+            $query .= " AND school_id = :school_id";
+            $params[':school_id'] = $filters['school_id'];
+        }
+        
+        $query .= " GROUP BY document_type ORDER BY total DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getDocumentTypeStats Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Get recent documents with filters
+public function getRecentDocuments($limit = 10, $filters = []) {
+    try {
+        $query = "SELECT d.*, u.username as uploader_name 
+                  FROM " . $this->table . " d
+                  LEFT JOIN users u ON d.user_id = u.id
+                  WHERE d.status = 1";
+        $params = [];
+        
+        if(!empty($filters['doc_year'])) {
+            $query .= " AND d.doc_year = :doc_year";
+            $params[':doc_year'] = $filters['doc_year'];
+        }
+        
+        if(!empty($filters['office_type_id'])) {
+            $query .= " AND d.office_type_id = :office_type_id";
+            $params[':office_type_id'] = $filters['office_type_id'];
+        }
+        
+        if(!empty($filters['school_id'])) {
+            $query .= " AND d.school_id = :school_id";
+            $params[':school_id'] = $filters['school_id'];
+        }
+        
+        $query .= " ORDER BY d.uploader_at DESC LIMIT :limit";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getRecentDocuments Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Get top schools by document count
+public function getTopSchoolsByDocumentCount($limit = 5, $filters = []) {
+    try {
+        $query = "SELECT s.school_name, ot.type_name as office_type_name, COUNT(d.id) as doc_count
+                  FROM schools s
+                  LEFT JOIN documents d ON d.school_name = s.school_name AND d.status = 1
+                  LEFT JOIN office_types ot ON s.office_type_id = ot.id
+                  WHERE s.status = 1";
+        $params = [];
+        
+        if(!empty($filters['doc_year'])) {
+            $query .= " AND d.doc_year = :doc_year";
+            $params[':doc_year'] = $filters['doc_year'];
+        }
+        
+        if(!empty($filters['office_type_id'])) {
+            $query .= " AND s.office_type_id = :office_type_id";
+            $params[':office_type_id'] = $filters['office_type_id'];
+        }
+        
+        $query .= " GROUP BY s.id ORDER BY doc_count DESC LIMIT :limit";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getTopSchoolsByDocumentCount Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Get documents grouped by year
+public function getDocumentsByYear($filters = []) {
+    try {
+        $query = "SELECT COALESCE(doc_year, 'No Year') as doc_year, COUNT(*) as total 
+                  FROM " . $this->table . " 
+                  WHERE status = 1";
+        $params = [];
+        
+        if(!empty($filters['office_type_id'])) {
+            $query .= " AND office_type_id = :office_type_id";
+            $params[':office_type_id'] = $filters['office_type_id'];
+        }
+        
+        if(!empty($filters['school_id'])) {
+            $query .= " AND school_id = :school_id";
+            $params[':school_id'] = $filters['school_id'];
+        }
+        
+        $query .= " GROUP BY doc_year ORDER BY doc_year DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getDocumentsByYear Error: " . $e->getMessage());
+        return [];
+    }
+}
 }
 ?>
