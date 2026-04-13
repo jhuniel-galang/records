@@ -10,54 +10,44 @@ class ActivityLog {
         $this->conn = $database->getConnection();
     }
 
-    // Log an activity
-    public function log($user_id, $username, $action, $description = '', $controller = '', $method = '', $old_data = null, $new_data = null, $status = 'success') {
-        try {
-            $query = "INSERT INTO " . $this->table . " 
-                      SET user_id = :user_id, 
-                          username = :username, 
-                          action = :action, 
-                          description = :description, 
-                          ip_address = :ip_address, 
-                          user_agent = :user_agent, 
-                          controller = :controller, 
-                          method = :method, 
-                          old_data = :old_data, 
-                          new_data = :new_data, 
-                          status = :status,
-                          created_at = NOW()";
-            
-            $stmt = $this->conn->prepare($query);
-            
-            // Get IP address
-            $ip_address = $this->getClientIP();
-            
-            // Get user agent
-            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-            
-            // Convert arrays to JSON
-            $old_data_json = $old_data ? json_encode($old_data) : null;
-            $new_data_json = $new_data ? json_encode($new_data) : null;
-            
-            $stmt->bindParam(':user_id', $user_id);
-            $stmt->bindParam(':username', $username);
-            $stmt->bindParam(':action', $action);
-            $stmt->bindParam(':description', $description);
-            $stmt->bindParam(':ip_address', $ip_address);
-            $stmt->bindParam(':user_agent', $user_agent);
-            $stmt->bindParam(':controller', $controller);
-            $stmt->bindParam(':method', $method);
-            $stmt->bindParam(':old_data', $old_data_json);
-            $stmt->bindParam(':new_data', $new_data_json);
-            $stmt->bindParam(':status', $status);
-            
-            return $stmt->execute();
-            
-        } catch (PDOException $e) {
-            error_log("ActivityLog Error: " . $e->getMessage());
-            return false;
-        }
+    // Log an activity (without IP and User Agent)
+public function log($user_id, $username, $action, $description = '', $controller = '', $method = '', $old_data = null, $new_data = null, $status = 'success') {
+    try {
+        $query = "INSERT INTO " . $this->table . " 
+                  SET user_id = :user_id, 
+                      username = :username, 
+                      action = :action, 
+                      description = :description, 
+                      controller = :controller, 
+                      method = :method, 
+                      old_data = :old_data, 
+                      new_data = :new_data, 
+                      status = :status,
+                      created_at = NOW()";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Convert arrays to JSON
+        $old_data_json = $old_data ? json_encode($old_data) : null;
+        $new_data_json = $new_data ? json_encode($new_data) : null;
+        
+        $stmt->bindParam(':user_id', $user_id);
+        $stmt->bindParam(':username', $username);
+        $stmt->bindParam(':action', $action);
+        $stmt->bindParam(':description', $description);
+        $stmt->bindParam(':controller', $controller);
+        $stmt->bindParam(':method', $method);
+        $stmt->bindParam(':old_data', $old_data_json);
+        $stmt->bindParam(':new_data', $new_data_json);
+        $stmt->bindParam(':status', $status);
+        
+        return $stmt->execute();
+        
+    } catch (PDOException $e) {
+        error_log("ActivityLog Error: " . $e->getMessage());
+        return false;
     }
+}
 
     // Get all activity logs with pagination - FIXED VERSION
     public function getAllLogs($limit = 50, $offset = 0, $filters = []) {

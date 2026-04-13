@@ -29,8 +29,23 @@ public function index() {
     $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
     $offset = ($page - 1) * $limit;
     
-    // TEMPORARILY IGNORE FILTERS FOR TESTING
+    // Build filters from GET parameters
     $filters = [];
+    if(!empty($_GET['user_id'])) {
+        $filters['user_id'] = $_GET['user_id'];
+    }
+    if(!empty($_GET['action_filter'])) {
+        $filters['action'] = $_GET['action_filter'];
+    }
+    if(!empty($_GET['date_from'])) {
+        $filters['date_from'] = $_GET['date_from'];
+    }
+    if(!empty($_GET['date_to'])) {
+        $filters['date_to'] = $_GET['date_to'];
+    }
+    if(!empty($_GET['status'])) {
+        $filters['status'] = $_GET['status'];
+    }
     
     $logs = $this->activityLog->getAllLogs($limit, $offset, $filters);
     $totalLogs = $this->activityLog->countLogs($filters);
@@ -103,46 +118,45 @@ public function index() {
     }
 
     // Export logs to CSV
-    public function export() {
-        // Build filters from GET parameters
-        $filters = [];
-        if(!empty($_GET['user_id'])) $filters['user_id'] = $_GET['user_id'];
-        if(!empty($_GET['action'])) $filters['action'] = $_GET['action'];
-        if(!empty($_GET['date_from'])) $filters['date_from'] = $_GET['date_from'];
-        if(!empty($_GET['date_to'])) $filters['date_to'] = $_GET['date_to'];
-        if(!empty($_GET['status'])) $filters['status'] = $_GET['status'];
-        
-        // Get all logs without pagination for export
-        $logs = $this->activityLog->getAllLogs(10000, 0, $filters);
-        
-        // Set headers for CSV download
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="activity_logs_' . date('Y-m-d') . '.csv"');
-        
-        // Open output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add CSV headers
-        fputcsv($output, ['ID', 'Username', 'Action', 'Description', 'IP Address', 'Controller', 'Method', 'Status', 'Created At']);
-        
-        // Add data rows
-        foreach($logs as $log) {
-            fputcsv($output, [
-                $log['id'],
-                $log['username'],
-                $log['action'],
-                $log['description'],
-                $log['ip_address'],
-                $log['controller'],
-                $log['method'],
-                $log['status'],
-                $log['created_at']
-            ]);
-        }
-        
-        fclose($output);
-        exit();
+public function export() {
+    // Build filters from GET parameters
+    $filters = [];
+    if(!empty($_GET['user_id'])) $filters['user_id'] = $_GET['user_id'];
+    if(!empty($_GET['action'])) $filters['action'] = $_GET['action'];
+    if(!empty($_GET['date_from'])) $filters['date_from'] = $_GET['date_from'];
+    if(!empty($_GET['date_to'])) $filters['date_to'] = $_GET['date_to'];
+    if(!empty($_GET['status'])) $filters['status'] = $_GET['status'];
+    
+    // Get all logs without pagination for export
+    $logs = $this->activityLog->getAllLogs(10000, 0, $filters);
+    
+    // Set headers for CSV download
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="activity_logs_' . date('Y-m-d') . '.csv"');
+    
+    // Open output stream
+    $output = fopen('php://output', 'w');
+    
+    // Add CSV headers (removed IP Address)
+    fputcsv($output, ['ID', 'Username', 'Action', 'Description', 'Controller', 'Method', 'Status', 'Created At']);
+    
+    // Add data rows
+    foreach($logs as $log) {
+        fputcsv($output, [
+            $log['id'],
+            $log['username'],
+            $log['action'],
+            $log['description'],
+            $log['controller'],
+            $log['method'],
+            $log['status'],
+            $log['created_at']
+        ]);
     }
+    
+    fclose($output);
+    exit();
+}
 
     // Get statistics
     public function statistics() {

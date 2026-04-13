@@ -1,7 +1,6 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>System Report</h2>
     <div>
-
         <button onclick="window.print()" class="btn btn-success">
             <i class="bi bi-printer"></i> Print Report
         </button>
@@ -50,7 +49,7 @@
                 <select class="form-select" id="school_id" name="school_id">
                     <option value="">All Schools/Offices</option>
                     <?php foreach($all_schools as $school_item): ?>
-                        <option value="<?php echo $school_item['id']; ?>" <?php echo ($filters['school_id'] ?? '') == $school_item['id'] ? 'selected' : ''; ?>>
+<option value="<?php echo $school_item['id']; ?>" <?php echo ($filters['school_id'] ?? '') == $school_item['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($school_item['school_name']); ?>
                         </option>
                     <?php endforeach; ?>
@@ -68,15 +67,6 @@
         </form>
     </div>
 </div>
-
-
-
-
-
-
-
-
-
 
 <!-- Report Header -->
 <div class="card mb-4">
@@ -96,8 +86,6 @@
     </div>
 </div>
 
-
-
 <!-- Document Type Analytics Table -->
 <div class="card mb-4">
     <div class="card-header">
@@ -106,12 +94,11 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-bordered">
+                <thead class="table-dark">
                     <tr>
                         <th>Document Type</th>
                         <th>Number of Documents</th>
-                        <th>Percentage</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,28 +111,18 @@
                                         $colors = ['#667eea', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14'];
                                         echo $colors[array_rand($colors)];
                                     ?>;"></div>
-                                    <strong><?php echo htmlspecialchars($stat['document_type']); ?></strong>
+                                    <strong class="text-dark"><?php echo htmlspecialchars($stat['document_type']); ?></strong>
                                 </div>
                               </td>
                             <td>
-                                <span class="badge badge-primary"><?php echo number_format($stat['total']); ?></span>
-                              </td>
-                            <td>
-                                <?php 
-                                $percentage = $total_documents > 0 ? round(($stat['total'] / $total_documents) * 100, 2) : 0;
-                                ?>
-                                <div class="progress" style="height: 25px;">
-                                    <div class="progress-bar progress-bar-striped" role="progressbar" style="width: <?php echo $percentage; ?>%;">
-                                        <?php echo $percentage; ?>%
-                                    </div>
-                                </div>
+                                <span class="badge bg-primary"><?php echo number_format($stat['total']); ?></span>
                               </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="3" class="text-center py-4">
-                                <i class="bi bi-inbox" style="font-size: 48px; color: #050505;"></i>
+                            <td colspan="2" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 48px; color: #666;"></i>
                                 <p class="mt-2 text-muted">No documents found</p>
                               </td>
                         </tr>
@@ -155,7 +132,6 @@
                     <tr>
                         <th>Total</th>
                         <th><?php echo number_format($total_documents); ?></th>
-                        <th>100%</th>
                     </tr>
                 </tfoot>
             </table>
@@ -171,13 +147,12 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-bordered">
+                <thead class="table-dark">
                     <tr>
                         <th>#</th>
                         <th>School/Office Name</th>
                         <th>Number of Documents</th>
-                        <th>Percentage</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,28 +169,18 @@
                                 ?>
                               </td>
                             <td>
-                                <strong><?php echo htmlspecialchars($school_stat['school_name']); ?></strong>
+                                <strong class="text-dark"><?php echo htmlspecialchars($school_stat['school_name']); ?></strong>
                               </td>
                             <td>
                                 <span class="badge bg-primary"><?php echo number_format($school_stat['doc_count']); ?></span>
-                              </td>
-                            <td>
-                                <?php 
-                                $school_percentage = $total_documents > 0 ? round(($school_stat['doc_count'] / $total_documents) * 100, 2) : 0;
-                                ?>
-                                <div class="progress" style="height: 25px;">
-                                    <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: <?php echo $school_percentage; ?>%;">
-                                        <?php echo $school_percentage; ?>%
-                                    </div>
-                                </div>
                               </td>
                             </tr>
                         <?php $rank++; ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" class="text-center py-4">
-                                <i class="bi bi-building" style="font-size: 48px; color: #ccc;"></i>
+                            <td colspan="3" class="text-center py-4">
+                                <i class="bi bi-building" style="font-size: 48px; color: #666;"></i>
                                 <p class="mt-2 text-muted">No schools/offices found</p>
                               </td>
                         </tr>
@@ -225,7 +190,6 @@
                     <tr>
                         <th colspan="2">Total Schools with Documents</th>
                         <th><?php echo number_format(count($schools_by_document_count)); ?></th>
-                        <th>-</th>
                     </tr>
                 </tfoot>
             </table>
@@ -242,8 +206,8 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Rank</th>
                                 <th>School/Office</th>
@@ -264,7 +228,9 @@
                                         else echo $rank;
                                         ?>
                                       </td>
-                                    <td><?php echo htmlspecialchars($school_item['school_name']); ?></td>
+                                    <td>
+                                        <strong class="text-dark"><?php echo htmlspecialchars($school_item['school_name']); ?></strong>
+                                      </td>
                                     <td>
                                         <span class="badge bg-secondary"><?php echo htmlspecialchars($school_item['office_type_name'] ?? 'N/A'); ?></span>
                                       </td>
@@ -277,7 +243,7 @@
                             <?php else: ?>
                                 <tr>
                                     <td colspan="4" class="text-center py-4">
-                                        <i class="bi bi-bar-chart" style="font-size: 48px; color: #ccc;"></i>
+                                        <i class="bi bi-bar-chart" style="font-size: 48px; color: #666;"></i>
                                         <p class="mt-2 text-muted">No data available</p>
                                       </td>
                                 </tr>
@@ -296,12 +262,11 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Year</th>
                                 <th>Number of Documents</th>
-                                <th>Percentage</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -309,27 +274,17 @@
                                 <?php foreach($documents_by_year as $year_stat): ?>
                                 <tr>
                                     <td>
-                                        <strong><?php echo $year_stat['doc_year'] ?: 'No Year'; ?></strong>
+                                        <strong class="text-dark"><?php echo $year_stat['doc_year'] ?: 'No Year'; ?></strong>
                                       </td>
                                     <td>
                                         <span class="badge bg-primary"><?php echo number_format($year_stat['total']); ?></span>
-                                      </td>
-                                    <td>
-                                        <?php 
-                                        $year_percentage = $total_documents > 0 ? round(($year_stat['total'] / $total_documents) * 100, 2) : 0;
-                                        ?>
-                                        <div class="progress" style="height: 25px;">
-                                            <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" style="width: <?php echo $year_percentage; ?>%;">
-                                                <?php echo $year_percentage; ?>%
-                                            </div>
-                                        </div>
                                       </td>
                                 </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="3" class="text-center py-4">
-                                        <i class="bi bi-calendar-x" style="font-size: 48px; color: #000000;"></i>
+                                    <td colspan="2" class="text-center py-4">
+                                        <i class="bi bi-calendar-x" style="font-size: 48px; color: #666;"></i>
                                         <p class="mt-2 text-muted">No data available</p>
                                       </td>
                                 </tr>
@@ -339,7 +294,6 @@
                             <tr>
                                 <th>Total</th>
                                 <th><?php echo number_format($total_documents); ?></th>
-                                <th>100%</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -349,9 +303,24 @@
     </div>
 </div>
 
-
-
 <style>
+    .table-bordered td, .table-bordered th {
+        border: 1px solid #dee2e6;
+        color: #212529;
+    }
+    
+    .table tbody td {
+        color: #212529;
+    }
+    
+    .table thead th {
+        color: white;
+    }
+    
+    .text-dark {
+        color: #212529 !important;
+    }
+    
     @media print {
         .no-print, .btn, .card-header .btn, .d-flex .btn, form, .filter-section, .action-buttons {
             display: none !important;
@@ -373,6 +342,14 @@
             max-width: 100% !important;
             padding: 0 !important;
             margin: 0 !important;
+        }
+        
+        .table-bordered td, .table-bordered th {
+            border: 1px solid #000 !important;
+        }
+        
+        .text-dark {
+            color: #000 !important;
         }
     }
 </style>

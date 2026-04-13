@@ -1,31 +1,5 @@
-<?php
-// Debug - show what's in the logs array
-echo "<!-- DEBUG START -->\n";
-echo "<!-- logs exists: " . (isset($logs) ? 'YES' : 'NO') . " -->\n";
-echo "<!-- logs type: " . (isset($logs) ? gettype($logs) : 'N/A') . " -->\n";
-echo "<!-- logs count: " . (isset($logs) ? count($logs) : 'N/A') . " -->\n";
-echo "<!-- current_page: " . (isset($current_page) ? $current_page : 'NOT SET') . " -->\n";
-echo "<!-- total_logs: " . (isset($total_logs) ? $total_logs : 'NOT SET') . " -->\n";
-
-if (isset($logs) && is_array($logs) && count($logs) > 0) {
-    echo "<!-- First log structure: " . print_r($logs[0], true) . " -->\n";
-} else {
-    echo "<!-- Logs array is empty or not set -->\n";
-    
-    // Show all variables in scope for debugging
-    echo "<!-- All variables in scope: " . print_r(array_keys(get_defined_vars()), true) . " -->\n";
-}
-echo "<!-- DEBUG END -->\n";
-?>
-
-
-
-
-
-
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Activity Logs</h2>
-
 </div>
 
 <!-- Filter Form -->
@@ -52,13 +26,13 @@ echo "<!-- DEBUG END -->\n";
             </div>
             
             <div class="col-md-3">
-                <label for="action" class="form-label">Action</label>
-                <select class="form-select" id="action" name="action">
+                <label for="action_filter" class="form-label">Action</label>
+                <select class="form-select" id="action_filter" name="action_filter">
                     <option value="">All Actions</option>
-                    <?php foreach($actions as $action): ?>
-                        <option value="<?php echo htmlspecialchars($action); ?>" 
-                            <?php echo ($filters['action'] ?? '') == $action ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($action); ?>
+                    <?php foreach($actions as $action_item): ?>
+                        <option value="<?php echo htmlspecialchars($action_item); ?>" 
+                            <?php echo ($filters['action'] ?? '') == $action_item ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($action_item); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -107,7 +81,6 @@ echo "<!-- DEBUG END -->\n";
                         <th>User</th>
                         <th>Action</th>
                         <th>Description</th>
-                        <th>IP Address</th>
                         <th>Controller/Method</th>
                         <th>Status</th>
                         <th>Created At</th>
@@ -121,9 +94,9 @@ echo "<!-- DEBUG END -->\n";
                             <td><?php echo $log['id']; ?></td>
                             <td>
                                 <?php if($log['username']): ?>
-                                    <a href="index.php?controller=activitylog&action=userActivity&user_id=<?php echo $log['user_id']; ?>">
+                                    
                                         <?php echo htmlspecialchars($log['username']); ?>
-                                    </a>
+                                    
                                 <?php else: ?>
                                     <em>System</em>
                                 <?php endif; ?>
@@ -132,7 +105,6 @@ echo "<!-- DEBUG END -->\n";
                                 <span class="badge bg-info"><?php echo htmlspecialchars($log['action']); ?></span>
                             </td>
                             <td><?php echo htmlspecialchars(substr($log['description'], 0, 100)) . (strlen($log['description']) > 100 ? '...' : ''); ?></td>
-                            <td><?php echo $log['ip_address']; ?></td>
                             <td>
                                 <small><?php echo $log['controller']; ?>/<?php echo $log['method']; ?></small>
                             </td>
@@ -154,7 +126,7 @@ echo "<!-- DEBUG END -->\n";
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" class="text-center">No activity logs found</td>
+                            <td colspan="8" class="text-center">No activity logs found</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -166,19 +138,19 @@ echo "<!-- DEBUG END -->\n";
         <nav aria-label="Page navigation" class="mt-4">
             <ul class="pagination justify-content-center">
                 <li class="page-item <?php echo $current_page <= 1 ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?controller=activitylog&action=index&page=<?php echo $current_page-1; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">Previous</a>
+                    <a class="page-link" href="?controller=activitylog&action=index&page=<?php echo $current_page-1; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">Previous</a>
                 </li>
                 
                 <?php for($i = 1; $i <= $total_pages; $i++): ?>
                     <?php if($i >= $current_page - 2 && $i <= $current_page + 2): ?>
                         <li class="page-item <?php echo $i == $current_page ? 'active' : ''; ?>">
-                            <a class="page-link" href="?controller=activitylog&action=index&page=<?php echo $i; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>"><?php echo $i; ?></a>
+                            <a class="page-link" href="?controller=activitylog&action=index&page=<?php echo $i; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>"><?php echo $i; ?></a>
                         </li>
                     <?php endif; ?>
                 <?php endfor; ?>
                 
                 <li class="page-item <?php echo $current_page >= $total_pages ? 'disabled' : ''; ?>">
-                    <a class="page-link" href="?controller=activitylog&action=index&page=<?php echo $current_page+1; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">Next</a>
+                    <a class="page-link" href="?controller=activitylog&action=index&page=<?php echo $current_page+1; ?>&limit=<?php echo $limit; ?><?php echo !empty($filters) ? '&' . http_build_query($filters) : ''; ?>">Next</a>
                 </li>
             </ul>
         </nav>

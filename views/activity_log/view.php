@@ -33,14 +33,6 @@
                 <td><?php echo nl2br(htmlspecialchars($log['description'])); ?></td>
             </tr>
             <tr>
-                <th>IP Address</th>
-                <td><?php echo $log['ip_address']; ?></td>
-            </tr>
-            <tr>
-                <th>User Agent</th>
-                <td><small><?php echo htmlspecialchars($log['user_agent']); ?></small></td>
-            </tr>
-            <tr>
                 <th>Controller</th>
                 <td><?php echo $log['controller']; ?></td>
             </tr>

@@ -55,14 +55,6 @@ $action = $_GET['action'] ?? 'index';
                 </a>
             </li>
             
-            <!-- Activity Logs Link (Admin Only) -->
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page == 'activitylog' ? 'active' : ''; ?>" 
-                   href="index.php?controller=activitylog&action=index">
-                    <i class="bi bi-clock-history"></i> Activity Logs
-                </a>
-            </li>
-            <?php endif; ?>
 
             <?php if($_SESSION['user_role'] == 'admin'): ?>
             <li class="nav-item">
@@ -94,6 +86,16 @@ $action = $_GET['action'] ?? 'index';
         <i class="bi bi-file-text"></i> Reports
     </a>
 </li>
+
+
+<!-- Activity Logs Link (Admin Only) -->
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'activitylog' ? 'active' : ''; ?>" 
+                   href="index.php?controller=activitylog&action=index">
+                    <i class="bi bi-clock-history"></i> Activity Logs
+                </a>
+            </li>
+            <?php endif; ?>
 
 
             
