@@ -172,17 +172,35 @@ class User {
         return false;
     }
 
-    // Delete user (soft delete by status)
-    public function delete($id) {
-        $query = "UPDATE " . $this->table . " SET status = 0 WHERE id = :id";
+    // Delete user (permanent delete)
+public function delete($id) {
+    try {
+        // Check if user has uploaded documents
+        $checkQuery = "SELECT COUNT(*) as total FROM documents WHERE user_id = :user_id";
+        $checkStmt = $this->conn->prepare($checkQuery);
+        $checkStmt->bindParam(':user_id', $id);
+        $checkStmt->execute();
+        $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if($result['total'] > 0) {
+            // User has documents, cannot delete
+            return ['success' => false, 'message' => 'Cannot delete user because they have ' . $result['total'] . ' document(s) uploaded.'];
+        }
+        
+        // Delete the user permanently
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         
         if($stmt->execute()) {
-            return true;
+            return ['success' => true, 'message' => 'User deleted successfully'];
         }
-        return false;
+        return ['success' => false, 'message' => 'Failed to delete user'];
+    } catch (PDOException $e) {
+        error_log("User delete Error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
     }
+}
 
     // Activate user
     public function activate($id) {

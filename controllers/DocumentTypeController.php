@@ -160,38 +160,40 @@ if (!class_exists('DocumentTypeController')) {
             }
         }
 
-        // Delete document type (soft delete)
-        public function delete() {
-            $id = $_GET['id'] ?? 0;
-            
-            $documentType = new DocumentType();
-            $documentType->getTypeById($id);
-            $typeData = [
-                'id' => $documentType->id,
-                'type_name' => $documentType->type_name
-            ];
-            
-            if($documentType->delete($id)) {
-                // Log activity
-                $this->activityLog->log(
-                    $_SESSION['user_id'],
-                    $_SESSION['user_username'],
-                    'DEACTIVATE_DOCUMENT_TYPE',
-                    'Deactivated document type: ' . $documentType->type_name,
-                    'DocumentTypeController',
-                    'delete',
-                    $typeData,
-                    ['status' => 0],
-                    'success'
-                );
-                
-                $_SESSION['success'] = 'Document type deactivated successfully';
-            } else {
-                $_SESSION['error'] = 'Failed to deactivate document type';
-            }
-            
-            $this->redirect('index.php?controller=documenttype&action=index');
-        }
+        // Delete document type (permanent delete)
+public function delete() {
+    $id = $_GET['id'] ?? 0;
+    
+    $documentType = new DocumentType();
+    $documentType->getTypeById($id);
+    $typeData = [
+        'id' => $documentType->id,
+        'type_name' => $documentType->type_name
+    ];
+    
+    $result = $documentType->delete($id);
+    
+    if($result['success']) {
+        // Log activity
+        $this->activityLog->log(
+            $_SESSION['user_id'],
+            $_SESSION['user_username'],
+            'DELETE_DOCUMENT_TYPE',
+            'Permanently deleted document type: ' . $documentType->type_name,
+            'DocumentTypeController',
+            'delete',
+            $typeData,
+            null,
+            'success'
+        );
+        
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
+    }
+    
+    $this->redirect('index.php?controller=documenttype&action=index');
+}
 
         // Activate document type
         public function activate() {

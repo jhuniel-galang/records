@@ -129,18 +129,35 @@ public function getTypeById($id) {
         }
     }
 
-    // Delete office type (soft delete)
-    public function delete($id) {
-        try {
-            $query = "UPDATE " . $this->table . " SET status = 0 WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("OfficeType delete Error: " . $e->getMessage());
-            return false;
+    // Delete office type (permanent delete)
+public function delete($id) {
+    try {
+        // First, check if this office type is being used by any schools
+        $checkQuery = "SELECT COUNT(*) as total FROM schools WHERE office_type_id = :office_type_id AND status = 1";
+        $checkStmt = $this->conn->prepare($checkQuery);
+        $checkStmt->bindParam(':office_type_id', $id);
+        $checkStmt->execute();
+        $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if($result['total'] > 0) {
+            // Office type is being used, cannot delete
+            return ['success' => false, 'message' => 'Cannot delete office type because it is used by ' . $result['total'] . ' school(s)/office(s).'];
         }
+        
+        // Delete the office type permanently
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        
+        if($stmt->execute()) {
+            return ['success' => true, 'message' => 'Office type deleted successfully'];
+        }
+        return ['success' => false, 'message' => 'Failed to delete office type'];
+    } catch (PDOException $e) {
+        error_log("OfficeType delete Error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
     }
+}
 
     // Activate office type
     public function activate($id) {

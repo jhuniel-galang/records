@@ -143,18 +143,45 @@ public function update() {
     }
 }
 
-    // Delete school (soft delete)
-    public function delete($id) {
-        try {
-            $query = "UPDATE " . $this->table . " SET status = 0, updated_at = NOW() WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("School delete Error: " . $e->getMessage());
-            return false;
+    // Delete school (permanent delete)
+public function delete($id) {
+    try {
+        // First, check if there are any documents linked to this school
+        $checkQuery = "SELECT COUNT(*) as total FROM documents WHERE school_name = :school_name";
+        $checkStmt = $this->conn->prepare($checkQuery);
+        
+        // Get school name first
+        $getNameQuery = "SELECT school_name FROM " . $this->table . " WHERE id = :id";
+        $getNameStmt = $this->conn->prepare($getNameQuery);
+        $getNameStmt->bindParam(':id', $id);
+        $getNameStmt->execute();
+        $schoolData = $getNameStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if($schoolData) {
+            $checkStmt->bindParam(':school_name', $schoolData['school_name']);
+            $checkStmt->execute();
+            $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if($result['total'] > 0) {
+                // School has documents, cannot delete
+                return ['success' => false, 'message' => 'Cannot delete school because it has ' . $result['total'] . ' document(s) linked to it.'];
+            }
         }
+        
+        // Delete the school permanently
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        
+        if($stmt->execute()) {
+            return ['success' => true, 'message' => 'School deleted successfully'];
+        }
+        return ['success' => false, 'message' => 'Failed to delete school'];
+    } catch (PDOException $e) {
+        error_log("School delete Error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
     }
+}
 
     // Activate school
     public function activate($id) {

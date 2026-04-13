@@ -138,18 +138,45 @@ class DocumentType {
         }
     }
 
-    // Delete document type (soft delete)
-    public function delete($id) {
-        try {
-            $query = "UPDATE " . $this->table . " SET status = 0 WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("DocumentType delete Error: " . $e->getMessage());
-            return false;
+    // Delete document type (permanent delete)
+public function delete($id) {
+    try {
+        // First, check if this document type is being used by any documents
+        $checkQuery = "SELECT COUNT(*) as total FROM documents WHERE document_type = :type_name AND status = 1";
+        $checkStmt = $this->conn->prepare($checkQuery);
+        
+        // Get the type name first
+        $getNameQuery = "SELECT type_name FROM " . $this->table . " WHERE id = :id";
+        $getNameStmt = $this->conn->prepare($getNameQuery);
+        $getNameStmt->bindParam(':id', $id);
+        $getNameStmt->execute();
+        $typeData = $getNameStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if($typeData) {
+            $checkStmt->bindParam(':type_name', $typeData['type_name']);
+            $checkStmt->execute();
+            $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if($result['total'] > 0) {
+                // Document type is being used, cannot delete
+                return ['success' => false, 'message' => 'Cannot delete document type because it is used by ' . $result['total'] . ' document(s).'];
+            }
         }
+        
+        // Delete the document type permanently
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        
+        if($stmt->execute()) {
+            return ['success' => true, 'message' => 'Document type deleted successfully'];
+        }
+        return ['success' => false, 'message' => 'Failed to delete document type'];
+    } catch (PDOException $e) {
+        error_log("DocumentType delete Error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
     }
+}
 
     // Activate document type
     public function activate($id) {

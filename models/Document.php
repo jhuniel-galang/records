@@ -19,50 +19,50 @@ class Document {
     public $uploader_at;
     public $delete_at;
     public $status;
-    public $office_type_id;
 
     public function __construct() {
         $database = new Database();
         $this->conn = $database->getConnection();
     }
 
-   // Upload a new document
-public function upload() {
-    try {
-        $query = "INSERT INTO " . $this->table . " 
-                  SET user_id = :user_id,
-                      school_name = :school_name,
-                      file_name = :file_name,
-                      doc_title = :doc_title,
-                      doc_year = :doc_year,
-                      file_path = :file_path,
-                      file_hash = :file_hash,
-                      file_type = :file_type,
-                      file_size = :file_size,
-                      remarks = :remarks,
-                      document_type = :document_type,
-                      status = 1";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        $stmt->bindParam(':user_id', $this->user_id);
-        $stmt->bindParam(':school_name', $this->school_name);
-        $stmt->bindParam(':file_name', $this->file_name);
-        $stmt->bindParam(':doc_title', $this->doc_title);
-        $stmt->bindParam(':doc_year', $this->doc_year);
-        $stmt->bindParam(':file_path', $this->file_path);
-        $stmt->bindParam(':file_hash', $this->file_hash);
-        $stmt->bindParam(':file_type', $this->file_type);
-        $stmt->bindParam(':file_size', $this->file_size);
-        $stmt->bindParam(':remarks', $this->remarks);
-        $stmt->bindParam(':document_type', $this->document_type);
-        
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        error_log("Document upload Error: " . $e->getMessage());
-        return false;
+    // Upload a new document
+    public function upload() {
+        try {
+            $query = "INSERT INTO " . $this->table . " 
+                      SET user_id = :user_id,
+                          school_name = :school_name,
+                          file_name = :file_name,
+                          doc_title = :doc_title,
+                          doc_year = :doc_year,
+                          file_path = :file_path,
+                          file_hash = :file_hash,
+                          file_type = :file_type,
+                          file_size = :file_size,
+                          remarks = :remarks,
+                          document_type = :document_type,
+                          status = 1";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $stmt->bindParam(':user_id', $this->user_id);
+            $stmt->bindParam(':school_name', $this->school_name);
+            $stmt->bindParam(':file_name', $this->file_name);
+            $stmt->bindParam(':doc_title', $this->doc_title);
+            $stmt->bindParam(':doc_year', $this->doc_year);
+            $stmt->bindParam(':file_path', $this->file_path);
+            $stmt->bindParam(':file_hash', $this->file_hash);
+            $stmt->bindParam(':file_type', $this->file_type);
+            $stmt->bindParam(':file_size', $this->file_size);
+            $stmt->bindParam(':remarks', $this->remarks);
+            $stmt->bindParam(':document_type', $this->document_type);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Document upload Error: " . $e->getMessage());
+            return false;
+        }
     }
-}
+    
     // Get all documents
     public function getAllDocuments($includeInactive = false) {
         try {
@@ -121,7 +121,7 @@ public function upload() {
         }
     }
 
-  // Get single document by ID
+    // Get single document by ID
 public function getDocumentById($id) {
     try {
         $query = "SELECT d.*, u.username as uploader_name 
@@ -136,14 +136,13 @@ public function getDocumentById($id) {
         if($stmt->rowCount() > 0) {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $this->id = $row['id'];
-            $this->user_id = $row['user_id'];
+            $this->user_id = $row['user_id'];  // MAKE SURE THIS LINE EXISTS
             $this->school_name = $row['school_name'];
-            $this->office_type_id = $row['office_type_id'];  // Add this line
             $this->file_name = $row['file_name'];
             $this->doc_title = $row['doc_title'];
             $this->doc_year = $row['doc_year'];
             $this->file_path = $row['file_path'];
-            $this->file_hash = $row['file_hash'];
+            $this->file_hash = $row['file_hash'] ?? null;
             $this->file_type = $row['file_type'];
             $this->file_size = $row['file_size'];
             $this->remarks = $row['remarks'];
@@ -159,34 +158,32 @@ public function getDocumentById($id) {
     }
 }
 
-  // Update document
-public function update() {
-    try {
-        $query = "UPDATE " . $this->table . " 
-                  SET school_name = :school_name,
-                      office_type_id = :office_type_id,
-                      doc_title = :doc_title,
-                      doc_year = :doc_year,
-                      remarks = :remarks,
-                      document_type = :document_type
-                  WHERE id = :id";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        $stmt->bindParam(':school_name', $this->school_name);
-        $stmt->bindParam(':office_type_id', $this->office_type_id);
-        $stmt->bindParam(':doc_title', $this->doc_title);
-        $stmt->bindParam(':doc_year', $this->doc_year);
-        $stmt->bindParam(':remarks', $this->remarks);
-        $stmt->bindParam(':document_type', $this->document_type);
-        $stmt->bindParam(':id', $this->id);
-        
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        error_log("Document update Error: " . $e->getMessage());
-        return false;
+    // Update document
+    public function update() {
+        try {
+            $query = "UPDATE " . $this->table . " 
+                      SET school_name = :school_name,
+                          doc_title = :doc_title,
+                          doc_year = :doc_year,
+                          remarks = :remarks,
+                          document_type = :document_type
+                      WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $stmt->bindParam(':school_name', $this->school_name);
+            $stmt->bindParam(':doc_title', $this->doc_title);
+            $stmt->bindParam(':doc_year', $this->doc_year);
+            $stmt->bindParam(':remarks', $this->remarks);
+            $stmt->bindParam(':document_type', $this->document_type);
+            $stmt->bindParam(':id', $this->id);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Document update Error: " . $e->getMessage());
+            return false;
+        }
     }
-}
 
     // Soft delete document
     public function delete($id) {
@@ -459,96 +456,26 @@ public function update() {
         }
     }
 
-    // Get all documents with pagination, filtering, and sorting
-    public function getAllDocumentsPaginated($limit, $offset, $filters = [], $sort_by = 'id', $sort_order = 'DESC') {
+    // Check if document title already exists
+    public function checkDuplicateTitle($doc_title, $school_name, $doc_year = null, $exclude_id = null) {
         try {
-            $query = "SELECT d.*, u.username as uploader_name 
-                      FROM " . $this->table . " d
-                      LEFT JOIN users u ON d.user_id = u.id
-                      WHERE d.status = 1";
-            $params = [];
+            $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                      WHERE doc_title = :doc_title 
+                      AND school_name = :school_name 
+                      AND status = 1";
+            $params = [
+                ':doc_title' => $doc_title,
+                ':school_name' => $school_name
+            ];
             
-            // Apply filters
-            if(!empty($filters['search'])) {
-                $search = '%' . $filters['search'] . '%';
-                $query .= " AND (d.file_name LIKE :search OR d.school_name LIKE :search OR d.doc_title LIKE :search)";
-                $params[':search'] = $search;
-            }
-            
-            if(!empty($filters['document_type'])) {
-                $query .= " AND d.document_type = :document_type";
-                $params[':document_type'] = $filters['document_type'];
-            }
-            
-            if(!empty($filters['doc_year'])) {
-                $query .= " AND d.doc_year = :doc_year";
-                $params[':doc_year'] = $filters['doc_year'];
-            }
-            
-            if(!empty($filters['date_from'])) {
-                $query .= " AND DATE(d.uploader_at) >= :date_from";
-                $params[':date_from'] = $filters['date_from'];
-            }
-            
-            if(!empty($filters['date_to'])) {
-                $query .= " AND DATE(d.uploader_at) <= :date_to";
-                $params[':date_to'] = $filters['date_to'];
-            }
-            
-            // Allowed sort columns
-            $allowed_sort = ['id', 'file_name', 'doc_title', 'doc_year', 'uploader_at'];
-            $sort_by = in_array($sort_by, $allowed_sort) ? $sort_by : 'id';
-            $sort_order = $sort_order == 'ASC' ? 'ASC' : 'DESC';
-            
-            $query .= " ORDER BY " . $sort_by . " " . $sort_order . " LIMIT :limit OFFSET :offset";
-            
-            $stmt = $this->conn->prepare($query);
-            
-            foreach($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            
-            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-            
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Document getAllDocumentsPaginated Error: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    // Count documents with filters
-    public function countDocuments($filters = []) {
-        try {
-            $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE status = 1";
-            $params = [];
-            
-            if(!empty($filters['search'])) {
-                $search = '%' . $filters['search'] . '%';
-                $query .= " AND (file_name LIKE :search OR school_name LIKE :search OR doc_title LIKE :search)";
-                $params[':search'] = $search;
-            }
-            
-            if(!empty($filters['document_type'])) {
-                $query .= " AND document_type = :document_type";
-                $params[':document_type'] = $filters['document_type'];
-            }
-            
-            if(!empty($filters['doc_year'])) {
+            if ($doc_year) {
                 $query .= " AND doc_year = :doc_year";
-                $params[':doc_year'] = $filters['doc_year'];
+                $params[':doc_year'] = $doc_year;
             }
             
-            if(!empty($filters['date_from'])) {
-                $query .= " AND DATE(uploader_at) >= :date_from";
-                $params[':date_from'] = $filters['date_from'];
-            }
-            
-            if(!empty($filters['date_to'])) {
-                $query .= " AND DATE(uploader_at) <= :date_to";
-                $params[':date_to'] = $filters['date_to'];
+            if ($exclude_id) {
+                $query .= " AND id != :exclude_id";
+                $params[':exclude_id'] = $exclude_id;
             }
             
             $stmt = $this->conn->prepare($query);
@@ -559,48 +486,165 @@ public function update() {
             
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $row['total'];
+            return $row['total'] > 0;
         } catch (PDOException $e) {
-            error_log("Document countDocuments Error: " . $e->getMessage());
-            return 0;
+            error_log("Document checkDuplicateTitle Error: " . $e->getMessage());
+            return false;
         }
     }
 
-    // Get unique years for filter
-    public function getDocumentYears() {
+    // Check if file already exists (by file name)
+    public function checkFileDuplicate($file_name, $school_name, $exclude_id = null) {
         try {
-            $query = "SELECT DISTINCT doc_year FROM " . $this->table . " 
-                      WHERE doc_year IS NOT NULL AND doc_year != '' AND status = 1
-                      ORDER BY doc_year DESC";
+            $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                      WHERE file_name = :file_name 
+                      AND school_name = :school_name 
+                      AND status = 1";
+            $params = [
+                ':file_name' => $file_name,
+                ':school_name' => $school_name
+            ];
+            
+            if ($exclude_id) {
+                $query .= " AND id != :exclude_id";
+                $params[':exclude_id'] = $exclude_id;
+            }
+            
             $stmt = $this->conn->prepare($query);
+            
+            foreach($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['total'] > 0;
         } catch (PDOException $e) {
-            error_log("Document getDocumentYears Error: " . $e->getMessage());
-            return [];
+            error_log("Document checkFileDuplicate Error: " . $e->getMessage());
+            return false;
         }
     }
 
-    // Check if document title already exists
-public function checkDuplicateTitle($doc_title, $school_name, $doc_year = null, $exclude_id = null) {
+    // Check if file content is duplicate (by file hash)
+    public function checkFileHashDuplicate($file_hash, $exclude_id = null) {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                      WHERE file_hash = :file_hash 
+                      AND status = 1";
+            $params = [
+                ':file_hash' => $file_hash
+            ];
+            
+            if ($exclude_id) {
+                $query .= " AND id != :exclude_id";
+                $params[':exclude_id'] = $exclude_id;
+            }
+            
+            $stmt = $this->conn->prepare($query);
+            
+            foreach($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['total'] > 0;
+        } catch (PDOException $e) {
+            error_log("Document checkFileHashDuplicate Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Get all documents with pagination, filtering, and sorting
+public function getAllDocumentsPaginated($limit, $offset, $filters = [], $sort_by = 'id', $sort_order = 'DESC') {
     try {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
-                  WHERE doc_title = :doc_title 
-                  AND school_name = :school_name 
-                  AND status = 1";
-        $params = [
-            ':doc_title' => $doc_title,
-            ':school_name' => $school_name
-        ];
+        $query = "SELECT d.*, u.username as uploader_name 
+                  FROM " . $this->table . " d
+                  LEFT JOIN users u ON d.user_id = u.id
+                  WHERE d.status = 1";
+        $params = [];
         
-        if ($doc_year) {
+        // Apply filters
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (d.doc_title LIKE :search OR d.school_name LIKE :search OR d.file_name LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['document_type'])) {
+            $query .= " AND d.document_type = :document_type";
+            $params[':document_type'] = $filters['document_type'];
+        }
+        
+        if(!empty($filters['doc_year'])) {
+            $query .= " AND d.doc_year = :doc_year";
+            $params[':doc_year'] = $filters['doc_year'];
+        }
+        
+        if(!empty($filters['date_from'])) {
+            $query .= " AND DATE(d.uploader_at) >= :date_from";
+            $params[':date_from'] = $filters['date_from'];
+        }
+        
+        if(!empty($filters['date_to'])) {
+            $query .= " AND DATE(d.uploader_at) <= :date_to";
+            $params[':date_to'] = $filters['date_to'];
+        }
+        
+        // Allowed sort columns
+        $allowed_sort = ['id', 'doc_title', 'doc_year', 'uploader_at'];
+        $sort_by = in_array($sort_by, $allowed_sort) ? $sort_by : 'id';
+        $sort_order = $sort_order == 'ASC' ? 'ASC' : 'DESC';
+        
+        $query .= " ORDER BY " . $sort_by . " " . $sort_order . " LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getAllDocumentsPaginated Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Count documents with filters
+public function countDocuments($filters = []) {
+    try {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE status = 1";
+        $params = [];
+        
+        if(!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query .= " AND (doc_title LIKE :search OR school_name LIKE :search OR file_name LIKE :search)";
+            $params[':search'] = $search;
+        }
+        
+        if(!empty($filters['document_type'])) {
+            $query .= " AND document_type = :document_type";
+            $params[':document_type'] = $filters['document_type'];
+        }
+        
+        if(!empty($filters['doc_year'])) {
             $query .= " AND doc_year = :doc_year";
-            $params[':doc_year'] = $doc_year;
+            $params[':doc_year'] = $filters['doc_year'];
         }
         
-        if ($exclude_id) {
-            $query .= " AND id != :exclude_id";
-            $params[':exclude_id'] = $exclude_id;
+        if(!empty($filters['date_from'])) {
+            $query .= " AND DATE(uploader_at) >= :date_from";
+            $params[':date_from'] = $filters['date_from'];
+        }
+        
+        if(!empty($filters['date_to'])) {
+            $query .= " AND DATE(uploader_at) <= :date_to";
+            $params[':date_to'] = $filters['date_to'];
         }
         
         $stmt = $this->conn->prepare($query);
@@ -611,77 +655,28 @@ public function checkDuplicateTitle($doc_title, $school_name, $doc_year = null, 
         
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
+        return $row['total'];
     } catch (PDOException $e) {
-        error_log("Document checkDuplicateTitle Error: " . $e->getMessage());
-        return false;
+        error_log("Document countDocuments Error: " . $e->getMessage());
+        return 0;
     }
 }
 
-
-// Check if file already exists (by file name)
-public function checkFileDuplicate($file_name, $school_name, $exclude_id = null) {
+// Get unique years for filter
+public function getDocumentYears() {
     try {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
-                  WHERE file_name = :file_name 
-                  AND school_name = :school_name 
-                  AND status = 1";
-        $params = [
-            ':file_name' => $file_name,
-            ':school_name' => $school_name
-        ];
-        
-        if ($exclude_id) {
-            $query .= " AND id != :exclude_id";
-            $params[':exclude_id'] = $exclude_id;
-        }
-        
+        $query = "SELECT DISTINCT doc_year FROM " . $this->table . " 
+                  WHERE doc_year IS NOT NULL AND doc_year != '' AND status = 1
+                  ORDER BY doc_year DESC";
         $stmt = $this->conn->prepare($query);
-        
-        foreach($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
         $stmt->execute();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
+        $results = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $results ? $results : [];
     } catch (PDOException $e) {
-        error_log("Document checkFileDuplicate Error: " . $e->getMessage());
-        return false;
+        error_log("Document getDocumentYears Error: " . $e->getMessage());
+        return [];
     }
 }
-
-// Check if file content is duplicate (by file hash)
-public function checkFileHashDuplicate($file_hash, $exclude_id = null) {
-    try {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
-                  WHERE file_hash = :file_hash 
-                  AND status = 1";
-        $params = [
-            ':file_hash' => $file_hash
-        ];
-        
-        if ($exclude_id) {
-            $query .= " AND id != :exclude_id";
-            $params[':exclude_id'] = $exclude_id;
-        }
-        
-        $stmt = $this->conn->prepare($query);
-        
-        foreach($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
-    } catch (PDOException $e) {
-        error_log("Document checkFileHashDuplicate Error: " . $e->getMessage());
-        return false;
-    }
-}
-
-
 
 // Get document type statistics with filters
 public function getDocumentTypeStats($filters = []) {
@@ -830,6 +825,60 @@ public function getDocumentsByYear($filters = []) {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         error_log("Document getDocumentsByYear Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Get all schools with their document counts
+public function getSchoolsByDocumentCount() {
+    try {
+        $query = "SELECT s.school_name, COUNT(d.id) as doc_count
+                  FROM schools s
+                  LEFT JOIN documents d ON d.school_name = s.school_name AND d.status = 1
+                  WHERE s.status = 1
+                  GROUP BY s.id
+                  ORDER BY doc_count DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getSchoolsByDocumentCount Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Get schools by document count with filters (year and document type)
+public function getSchoolsByDocumentCountWithFilters($filters = []) {
+    try {
+        $query = "SELECT s.school_name, COUNT(d.id) as doc_count
+                  FROM schools s
+                  LEFT JOIN documents d ON d.school_name = s.school_name AND d.status = 1
+                  WHERE s.status = 1";
+        $params = [];
+        
+        if(!empty($filters['doc_year'])) {
+            $query .= " AND d.doc_year = :doc_year";
+            $params[':doc_year'] = $filters['doc_year'];
+        }
+        
+        if(!empty($filters['document_type'])) {
+            $query .= " AND d.document_type = :document_type";
+            $params[':document_type'] = $filters['document_type'];
+        }
+        
+        $query .= " GROUP BY s.id ORDER BY doc_count DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Document getSchoolsByDocumentCountWithFilters Error: " . $e->getMessage());
         return [];
     }
 }

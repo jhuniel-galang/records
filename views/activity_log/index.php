@@ -25,15 +25,7 @@ echo "<!-- DEBUG END -->\n";
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Activity Logs</h2>
-    <div>
-        <a href="index.php?controller=activitylog&action=statistics" class="btn btn-info me-2">
-            <i class="bi bi-graph-up"></i> Statistics
-        </a>
-        <a href="index.php?controller=activitylog&action=export<?php echo !empty($filters) ? '?' . http_build_query($filters) : ''; ?>" 
-           class="btn btn-success">
-            <i class="bi bi-download"></i> Export CSV
-        </a>
-    </div>
+
 </div>
 
 <!-- Filter Form -->

@@ -6,13 +6,22 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h5><?php echo htmlspecialchars($document->file_name); ?></h5>
+                <h5><?php echo htmlspecialchars($document->doc_title ?: $document->file_name); ?></h5>
+                <small class="text-muted">Document Title</small>
             </div>
             <div class="card-body">
                 <table class="table table-bordered">
                     <tr>
                         <th style="width: 200px;">ID</th>
                         <td><?php echo $document->id; ?></td>
+                    </tr>
+                    <tr>
+                        <th>Document Title</th>
+                        <td><strong><?php echo htmlspecialchars($document->doc_title ?: 'Untitled'); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <th>Document Year</th>
+                        <td><?php echo htmlspecialchars($document->doc_year ?: 'N/A'); ?></td>
                     </tr>
                     <tr>
                         <th>File Name</th>
@@ -33,16 +42,8 @@
                         <td><?php echo strtoupper($document->file_type); ?></td>
                     </tr>
                     <tr>
-                        <th>File Size</th>
-                        <td><?php echo $file_size_formatted; ?></td>
-                    </tr>
-                    <tr>
                         <th>Remarks</th>
                         <td><?php echo nl2br(htmlspecialchars($document->remarks)); ?></td>
-                    </tr>
-                    <tr>
-                        <th>Uploaded By</th>
-                        <td><?php echo htmlspecialchars($document->uploader_name ?? 'Unknown'); ?> (ID: <?php echo $document->user_id; ?>)</td>
                     </tr>
                     <tr>
                         <th>Upload Date</th>
@@ -96,12 +97,15 @@
                     <p class="mt-2"><?php echo strtoupper($document->file_type); ?> Document</p>
                 <?php endif; ?>
                 
-                <div class="alert alert-info mt-3 mb-0 small">
-                    <i class="bi bi-info-circle"></i>
-                    This document is confidential. Preview only - no download option.
+                
+                <!-- Document Info Summary -->
+                <div class="mt-3 text-start">
+                    <small class="text-muted">Document Title:</small>
+                    <p class="mb-2"><strong><?php echo htmlspecialchars(substr($document->doc_title ?: 'Untitled', 0, 50)); ?></strong></p>
+                    
+                    <small class="text-muted">Year:</small>
+                    <p class="mb-0"><strong><?php echo htmlspecialchars($document->doc_year ?: 'N/A'); ?></strong></p>
                 </div>
-                
-                
             </div>
         </div>
     </div>

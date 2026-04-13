@@ -29,13 +29,13 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
         }
 
         body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #1a1a2e;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: auto;
-}
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
         /* Header */
         .preview-header {
@@ -129,12 +129,13 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
             color: #4cc9f0;
         }
 
-        /* Main Container - Flex layout */
+        /* Main Container */
         .main-container {
-    flex: 1;
-    display: flex;
-    overflow: auto;
-}
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
 
         /* Preview Section */
         .preview-section {
@@ -149,26 +150,33 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
 
         /* Scrollable Preview Area */
         .scrollable-preview {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: auto;
-}
-
-        /* PDF Viewer */
-        .pdf-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            margin: 0 auto;
+            justify-content: center;
+            align-items: flex-start;
+            background: #0f0f1a;
+            position: relative;
+            min-height: 0;
         }
 
-        #pdfCanvas {
-            display: block;
+        /* PDF Viewer */
+        .pdf-viewer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #pdf-frame {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            border: none;
+            border-radius: 8px;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            background: white;
-            max-width: 100%;
-            height: auto;
         }
 
         /* Image Viewer */
@@ -187,65 +195,7 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
             height: auto;
         }
 
-        /* PDF Controls - Fixed at bottom of preview section */
-        .pdf-controls {
-            background: rgba(33, 33, 52, 0.98);
-            backdrop-filter: blur(10px);
-            padding: 12px 20px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            align-items: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            z-index: 50;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
-            width: 100%;
-        }
-
-        .pdf-controls button {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-            cursor: pointer;
-            padding: 10px 16px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-            font-weight: 500;
-            min-width: 80px;
-            justify-content: center;
-        }
-
-        .pdf-controls button:hover:not(:disabled) {
-            background: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
-        }
-
-        .pdf-controls button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .page-info {
-            color: white;
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            white-space: nowrap;
-            border: 1px solid rgba(255,255,255,0.1);
-            min-width: 130px;
-            text-align: center;
-        }
-
-        /* Info Panel - Scrollable */
+        /* Info Panel */
         .info-panel {
             width: 300px;
             background: rgba(26, 26, 46, 0.98);
@@ -377,25 +327,7 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
             background: rgba(255,255,255,0.3);
         }
 
-        /* Responsive Breakpoints */
-        @media (max-width: 1200px) {
-            .info-panel {
-                width: 280px;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .info-panel {
-                width: 260px;
-            }
-            
-            .pdf-controls button {
-                padding: 8px 12px;
-                min-width: 70px;
-                font-size: 0.85rem;
-            }
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -408,53 +340,14 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
                 max-height: 250px;
             }
             
-            .pdf-controls {
-                padding: 10px;
-                gap: 8px;
-            }
-            
-            .pdf-controls button {
-                padding: 8px 10px;
-                min-width: 60px;
-                font-size: 0.8rem;
-            }
-            
-            .page-info {
-                padding: 8px 12px;
-                min-width: 100px;
-                font-size: 0.85rem;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .preview-header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-            
             .header-left {
                 flex-direction: column;
-                align-items: stretch;
+                align-items: flex-start;
+                gap: 10px;
             }
             
             .file-details h2 {
                 max-width: none;
-            }
-            
-            .pdf-controls {
-                flex-wrap: wrap;
-            }
-            
-            .pdf-controls button {
-                flex: 1 1 auto;
-                min-width: 55px;
-            }
-            
-            .page-info {
-                width: 100%;
-                order: -1;
-                margin-bottom: 5px;
             }
         }
     </style>
@@ -474,6 +367,9 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
                 </div>
             </div>
         </div>
+        <div class="security-badge">
+            <i class="fas fa-lock"></i> Secure View Only
+        </div>
     </header>
 
     <!-- Main Container -->
@@ -483,16 +379,14 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
 
         <!-- Preview Section -->
         <div class="preview-section">
-            <!-- Scrollable Preview Area -->
             <div class="scrollable-preview" id="scrollablePreview">
                 <?php if ($is_pdf): ?>
-                <!-- PDF Viewer -->
-                <div class="pdf-wrapper">
-                    <div class="loading" id="loading">
-                        <i class="fas fa-spinner spinner"></i>
-                        <p>Loading PDF...</p>
-                    </div>
-                    <canvas id="pdfCanvas"></canvas>
+                <!-- PDF Viewer using iframe -->
+                <div class="pdf-viewer">
+                    <iframe id="pdf-frame" src="index.php?controller=document&action=preview&id=<?= $document->id ?>" 
+                            title="PDF Viewer"
+                            oncontextmenu="return false;">
+                    </iframe>
                 </div>
                 
                 <?php elseif ($is_image): ?>
@@ -515,41 +409,30 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
                 </div>
                 <?php endif; ?>
             </div>
-
-            <?php if ($is_pdf): ?>
-            <!-- PDF Controls - Always visible at bottom -->
-            <div class="pdf-controls">
-                <button onclick="prevPage()" id="prevBtn" disabled>
-                    <i class="fas fa-chevron-left"></i> Prev
-                </button>
-                <span class="page-info" id="pageInfo">
-                    <span id="currentPage">1</span> / <span id="totalPages">1</span>
-                </span>
-                <button onclick="nextPage()" id="nextBtn" disabled>
-                    Next <i class="fas fa-chevron-right"></i>
-                </button>
-                <button onclick="zoomIn()">
-                    <i class="fas fa-search-plus"></i> +
-                </button>
-                <button onclick="zoomOut()">
-                    <i class="fas fa-search-minus"></i> -
-                </button>
-                <button onclick="rotateDoc()">
-                    <i class="fas fa-redo-alt"></i> ↻
-                </button>
-                <button onclick="fitToScreen()">
-                    <i class="fas fa-expand"></i> Fit
-                </button>
-            </div>
-            <?php endif; ?>
         </div>
 
-        <!-- Info Panel - Scrollable -->
+        <!-- Info Panel -->
         <div class="info-panel">
             <h3><i class="fas fa-info-circle"></i> Document Information</h3>
             
             <div class="info-item">
-                <div class="info-label">School</div>
+                <div class="info-label">Document Title</div>
+                <div class="info-value">
+                    <i class="fas fa-file-alt" style="margin-right: 8px; opacity: 0.7;"></i>
+                    <?= htmlspecialchars($document->doc_title ?: 'Untitled') ?>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Document Year</div>
+                <div class="info-value">
+                    <i class="fas fa-calendar" style="margin-right: 8px; opacity: 0.7;"></i>
+                    <?= htmlspecialchars($document->doc_year ?: 'N/A') ?>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">School/Office</div>
                 <div class="info-value">
                     <i class="fas fa-school" style="margin-right: 8px; opacity: 0.7;"></i>
                     <?= htmlspecialchars($document->school_name ?: 'N/A') ?>
@@ -633,143 +516,7 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
         </div>
     </div>
 
-    <?php if ($is_pdf): ?>
-    <!-- PDF.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
-        // Set worker path
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-        // PDF variables
-        let pdfDoc = null;
-        let pageNum = 1;
-        let pageRendering = false;
-        let pageNumPending = null;
-        let scale = 1.0; // Start with fit to width
-        let rotation = 0;
-        const canvas = document.getElementById('pdfCanvas');
-        const ctx = canvas.getContext('2d');
-        const scrollableArea = document.getElementById('scrollablePreview');
-
-        // Load PDF
-        function loadPDF() {
-            const loadingTask = pdfjsLib.getDocument('index.php?controller=document&action=preview&id=<?= $document->id ?>&t=' + new Date().getTime());
-            
-            loadingTask.promise.then(function(pdf) {
-                pdfDoc = pdf;
-                document.getElementById('totalPages').textContent = pdf.numPages;
-                document.getElementById('loading').style.display = 'none';
-                
-                // Fit to screen on load
-                fitToScreen();
-            }).catch(function(error) {
-                console.error('Error loading PDF:', error);
-                document.getElementById('loading').innerHTML = `
-                    <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
-                    <p>Error loading PDF. Please try again.</p>
-                `;
-            });
-        }
-
-        // Render page
-        function renderPage(num) {
-            pageRendering = true;
-            
-            pdfDoc.getPage(num).then(function(page) {
-                const viewport = page.getViewport({ scale: scale, rotation: rotation });
-                
-                // Limit maximum canvas size for performance
-                const maxCanvasSize = 2000;
-                if (viewport.width > maxCanvasSize || viewport.height > maxCanvasSize) {
-                    const ratio = Math.min(maxCanvasSize / viewport.width, maxCanvasSize / viewport.height);
-                    scale *= ratio;
-                    return renderPage(num);
-                }
-                
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
-
-                const renderTask = page.render(renderContext);
-
-                renderTask.promise.then(function() {
-                    pageRendering = false;
-                    if (pageNumPending !== null) {
-                        renderPage(pageNumPending);
-                        pageNumPending = null;
-                    }
-                });
-            });
-
-            document.getElementById('currentPage').textContent = num;
-            updateButtons();
-        }
-
-        // Queue render page
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
-
-        // Previous page
-        function prevPage() {
-            if (pageNum <= 1) return;
-            pageNum--;
-            queueRenderPage(pageNum);
-        }
-
-        // Next page
-        function nextPage() {
-            if (pageNum >= pdfDoc.numPages) return;
-            pageNum++;
-            queueRenderPage(pageNum);
-        }
-
-        // Zoom in
-        function zoomIn() {
-            scale += 0.25;
-            queueRenderPage(pageNum);
-        }
-
-        // Zoom out
-        function zoomOut() {
-            if (scale > 0.5) {
-                scale -= 0.25;
-                queueRenderPage(pageNum);
-            }
-        }
-
-        // Rotate
-        function rotateDoc() {
-            rotation = (rotation + 90) % 360;
-            queueRenderPage(pageNum);
-        }
-
-        // Fit to screen width
-        function fitToScreen() {
-            if (!pdfDoc) return;
-            
-            pdfDoc.getPage(pageNum).then(function(page) {
-                const viewport = page.getViewport({ scale: 1.0 });
-                const containerWidth = scrollableArea.clientWidth - 40;
-                scale = containerWidth / viewport.width;
-                queueRenderPage(pageNum);
-            });
-        }
-
-        // Update buttons state
-        function updateButtons() {
-            document.getElementById('prevBtn').disabled = pageNum <= 1;
-            document.getElementById('nextBtn').disabled = pageNum >= pdfDoc.numPages;
-        }
-
         // Disable keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'u')) || 
@@ -778,30 +525,6 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
                 e.key === 'PrintScreen') {
                 e.preventDefault();
                 return false;
-            }
-            
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                prevPage();
-            }
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                nextPage();
-            }
-            
-            if (e.ctrlKey && e.key === '=') {
-                e.preventDefault();
-                zoomIn();
-            }
-            
-            if (e.ctrlKey && e.key === '-') {
-                e.preventDefault();
-                zoomOut();
-            }
-            
-            if (e.ctrlKey && e.key === '0') {
-                e.preventDefault();
-                fitToScreen();
             }
         });
 
@@ -829,39 +552,12 @@ $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp']);
             return false;
         };
 
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            // Optional: adjust zoom on resize
-        });
-
-        // Load PDF on page load
-        window.onload = loadPDF;
-    </script>
-    <?php endif; ?>
-
-    <script>
         <?php if ($is_image): ?>
         document.querySelectorAll('.secure-image').forEach(img => {
             img.addEventListener('contextmenu', e => e.preventDefault());
             img.addEventListener('dragstart', e => e.preventDefault());
         });
         <?php endif; ?>
-
-        window.onbeforeunload = function() {
-            return null;
-        };
-
-
-        scrollableArea.addEventListener('wheel', function(e) {
-    if (e.ctrlKey) {
-        e.preventDefault();
-        if (e.deltaY < 0) {
-            zoomIn();
-        } else {
-            zoomOut();
-        }
-    }
-});
     </script>
 </body>
 </html>

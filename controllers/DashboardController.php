@@ -14,11 +14,16 @@ class DashboardController extends BaseController {
             $this->redirect('index.php?controller=auth&action=login');
         }
 
-        // Get filters from GET parameters
+        // Get filters for Document Type Analytics
         $filters = [];
         if(!empty($_GET['doc_year'])) $filters['doc_year'] = $_GET['doc_year'];
         if(!empty($_GET['office_type_id'])) $filters['office_type_id'] = $_GET['office_type_id'];
         if(!empty($_GET['school_id'])) $filters['school_id'] = $_GET['school_id'];
+        
+        // Get filters for Schools by Document Count
+        $school_filters = [];
+        if(!empty($_GET['school_year'])) $school_filters['doc_year'] = $_GET['school_year'];
+        if(!empty($_GET['school_doc_type'])) $school_filters['document_type'] = $_GET['school_doc_type'];
         
         // Get all schools
         $school = new School();
@@ -43,11 +48,17 @@ class DashboardController extends BaseController {
         // Get top schools by document count
         $top_schools = $document->getTopSchoolsByDocumentCount(5, $filters);
         
+        // Get schools by document count (with school filters)
+        $schools_by_document_count = $document->getSchoolsByDocumentCountWithFilters($school_filters);
+        
         // Get documents by year
         $documents_by_year = $document->getDocumentsByYear($filters);
         
         // Get available years for filter
         $available_years = $document->getDocumentYears();
+        
+        // Get document types for filter
+        $document_types = $document->getDocumentTypes();
         
         // Get office types for filter
         $officeType = new OfficeType();
@@ -68,13 +79,16 @@ class DashboardController extends BaseController {
             'document_type_stats' => $document_type_stats,
             'recent_documents' => $recent_documents,
             'top_schools' => $top_schools,
+            'schools_by_document_count' => $schools_by_document_count,
             'documents_by_year' => $documents_by_year,
             'available_years' => $available_years,
+            'document_types' => $document_types,
             'office_types' => $office_types,
             'all_schools' => $all_schools,
             'total_office_types' => $total_office_types,
             'total_users_count' => $total_users_count,
             'filters' => $filters,
+            'school_filters' => $school_filters,
             'title' => 'Dashboard'
         ];
         

@@ -30,23 +30,56 @@ if (!class_exists('DocumentController')) {
             }
         }
 
-        // List all documents
-        public function index() {
-            $document = new Document();
-            $documents = $document->getAllDocuments();
-            
-            // Get statistics by document type
-            $stats = $document->countByType();
-            
-            $data = [
-                'documents' => $documents,
-                'stats' => $stats,
-                'total_documents' => count($documents),
-                'title' => 'Document Management'
-            ];
-            
-            $this->render('document/index.php', $data);
-        }
+        // List all documents with pagination, filtering, and sorting
+public function index() {
+    // Pagination settings
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+    $offset = ($page - 1) * $limit;
+    
+    // Sorting settings
+    $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'id';
+    $sort_order = isset($_GET['order']) && in_array($_GET['order'], ['ASC', 'DESC']) ? $_GET['order'] : 'DESC';
+    
+    // Build filters from GET parameters
+    $filters = [];
+    if(!empty($_GET['search'])) $filters['search'] = $_GET['search'];
+    if(!empty($_GET['document_type'])) $filters['document_type'] = $_GET['document_type'];
+    if(!empty($_GET['doc_year'])) $filters['doc_year'] = $_GET['doc_year'];
+    if(!empty($_GET['date_from'])) $filters['date_from'] = $_GET['date_from'];
+    if(!empty($_GET['date_to'])) $filters['date_to'] = $_GET['date_to'];
+    
+    $document = new Document();
+    $documents = $document->getAllDocumentsPaginated($limit, $offset, $filters, $sort_by, $sort_order);
+    $totalDocuments = $document->countDocuments($filters);
+    $totalPages = ceil($totalDocuments / $limit);
+    
+    // Get statistics by document type
+    $stats = $document->countByType();
+    
+    // Get all document types for filter
+    $documentTypes = $document->getDocumentTypes();
+    
+    // Get available years for filter
+    $available_years = $document->getDocumentYears();
+    
+    $data = [
+        'documents' => $documents,
+        'stats' => $stats,
+        'total_documents' => $totalDocuments,
+        'current_page' => $page,
+        'total_pages' => $totalPages,
+        'limit' => $limit,
+        'filters' => $filters,
+        'sort_by' => $sort_by,
+        'sort_order' => $sort_order,
+        'documentTypes' => $documentTypes,
+        'available_years' => $available_years,
+        'title' => 'Document Management'
+    ];
+    
+    $this->render('document/index.php', $data);
+}
 
         // Show upload form
 public function upload() {
@@ -252,34 +285,45 @@ public function preview() {
             die('File not found');
         }
         
-        // Get file mime type
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime_type = finfo_file($finfo, $file_path);
-        finfo_close($finfo);
+        // Get file extension
+        $file_ext = strtolower(pathinfo($document->file_name, PATHINFO_EXTENSION));
         
-        // Disable all caching and download attempts
-        header('Content-Type: ' . $mime_type);
-        header('Content-Disposition: inline; filename="' . $document->file_name . '"');
-        header('Content-Length: ' . filesize($file_path));
-        
-        // Security headers to prevent download
-        header('X-Content-Type-Options: nosniff');
-        header('X-Frame-Options: SAMEORIGIN');
-        header('X-XSS-Protection: 1; mode=block');
-        
-        // Disable caching
-        header('Cache-Control: no-cache, no-store, must-revalidate, private');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        
-        // For PDF files, add additional headers to disable download buttons
-        if ($document->file_type == 'pdf') {
-            header('Content-Security-Policy: default-src \'none\'; script-src \'none\'; style-src \'self\'; frame-ancestors \'self\';');
+        // For PDF files
+        if ($file_ext == 'pdf') {
+            // Set headers for PDF viewing
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="' . basename($document->file_name) . '"');
+            header('Content-Length: ' . filesize($file_path));
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+            
+            // Clear output buffer
+            ob_clean();
+            flush();
+            
+            // Read the file
+            readfile($file_path);
+            exit();
         }
         
-        // Output file
-        readfile($file_path);
-        exit();
+        // For images
+        if (in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp'])) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime_type = finfo_file($finfo, $file_path);
+            finfo_close($finfo);
+            
+            header('Content-Type: ' . $mime_type);
+            header('Content-Disposition: inline; filename="' . $document->file_name . '"');
+            header('Content-Length: ' . filesize($file_path));
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            
+            readfile($file_path);
+            exit();
+        }
+        
+        die('Preview not available for this file type');
         
     } else {
         die('Document not found');
@@ -481,16 +525,17 @@ public function update() {
         }
 
 
-        // Secure document preview (no download)
+        // Secure document preview (no download) - Allow all logged-in users to view
 public function securePreview() {
     $id = $_GET['id'] ?? 0;
     
     $document = new Document();
     if($document->getDocumentById($id)) {
         
-        // Check permission (admin or owner)
-        if ($_SESSION['user_role'] !== 'admin' && $document->user_id != $_SESSION['user_id']) {
-            die("You don't have permission to view this document.");
+        // Allow any logged-in user to view documents
+        // Remove the user_id check - just check if user is logged in
+        if (!$this->isLoggedIn()) {
+            die("You must be logged in to view this document.");
         }
         
         // Log the preview action

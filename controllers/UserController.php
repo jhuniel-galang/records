@@ -263,54 +263,43 @@ public function index() {
         }
     }
 
-    // Delete user (soft delete) - LOG THIS (DELETE action)
-    public function delete() {
-        $id = $_GET['id'] ?? 0;
+    // Delete user (permanent delete)
+public function delete() {
+    $id = $_GET['id'] ?? 0;
+    
+    $user = new User();
+    $user->getUserById($id);
+    $userData = [
+        'id' => $user->id,
+        'username' => $user->username,
+        'name' => $user->name,
+        'email' => $user->email,
+        'role' => $user->role
+    ];
+    
+    $result = $user->delete($id);
+    
+    if($result['success']) {
+        // Log activity
+        $this->activityLog->log(
+            $_SESSION['user_id'],
+            $_SESSION['user_username'],
+            'DELETE_USER',
+            'Permanently deleted user: ' . $user->username,
+            'UserController',
+            'delete',
+            $userData,
+            null,
+            'success'
+        );
         
-        $user = new User();
-        $user->getUserById($id);
-        $userData = [
-            'id' => $user->id,
-            'username' => $user->username,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role
-        ];
-        
-        if($user->delete($id)) {
-            // Log success
-            $this->activityLog->log(
-                $_SESSION['user_id'],
-                $_SESSION['user_username'],
-                'DEACTIVATE_USER',
-                'Deactivated user: ' . $user->username,
-                'UserController',
-                'delete',
-                $userData,
-                ['status' => 0],
-                'success'
-            );
-            
-            $_SESSION['success'] = 'User deactivated successfully';
-        } else {
-            // Log failure
-            $this->activityLog->log(
-                $_SESSION['user_id'],
-                $_SESSION['user_username'],
-                'DEACTIVATE_USER_FAILED',
-                'Failed to deactivate user: ' . $user->username,
-                'UserController',
-                'delete',
-                $userData,
-                null,
-                'failed'
-            );
-            
-            $_SESSION['error'] = 'Failed to deactivate user';
-        }
-        
-        $this->redirect('index.php?controller=user&action=index');
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
     }
+    
+    $this->redirect('index.php?controller=user&action=index');
+}
 
     // Activate user - LOG THIS (UPDATE action)
     public function activate() {

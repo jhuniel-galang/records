@@ -235,39 +235,41 @@ if (!class_exists('SchoolController')) {
             }
         }
 
-        // Delete school (soft delete)
-        public function delete() {
-            $id = $_GET['id'] ?? 0;
-            
-            $school = new School();
-            $school->getSchoolById($id);
-            $schoolData = [
-                'id' => $school->id,
-                'school_name' => $school->school_name,
-                'office_type_id' => $school->office_type_id
-            ];
-            
-            if($school->delete($id)) {
-                // Log activity
-                $this->activityLog->log(
-                    $_SESSION['user_id'],
-                    $_SESSION['user_username'],
-                    'DEACTIVATE_SCHOOL',
-                    'Deactivated school: ' . $school->school_name,
-                    'SchoolController',
-                    'delete',
-                    $schoolData,
-                    ['status' => 0],
-                    'success'
-                );
-                
-                $_SESSION['success'] = 'School deactivated successfully';
-            } else {
-                $_SESSION['error'] = 'Failed to deactivate school';
-            }
-            
-            $this->redirect('index.php?controller=school&action=index');
-        }
+        // Delete school (permanent delete)
+public function delete() {
+    $id = $_GET['id'] ?? 0;
+    
+    $school = new School();
+    $school->getSchoolById($id);
+    $schoolData = [
+        'id' => $school->id,
+        'school_name' => $school->school_name,
+        'office_type_id' => $school->office_type_id
+    ];
+    
+    $result = $school->delete($id);
+    
+    if($result['success']) {
+        // Log activity
+        $this->activityLog->log(
+            $_SESSION['user_id'],
+            $_SESSION['user_username'],
+            'DELETE_SCHOOL',
+            'Permanently deleted school: ' . $school->school_name,
+            'SchoolController',
+            'delete',
+            $schoolData,
+            null,
+            'success'
+        );
+        
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
+    }
+    
+    $this->redirect('index.php?controller=school&action=index');
+}
 
         // Activate school
         public function activate() {

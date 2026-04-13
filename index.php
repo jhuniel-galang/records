@@ -23,7 +23,8 @@ $controllerMap = [
     'document' => 'DocumentController',
     'documenttype' => 'DocumentTypeController',
     'form137' => 'Form137Controller',
-    'officetype' => 'OfficeTypeController'
+    'officetype' => 'OfficeTypeController',
+    'report' => 'ReportController'
 ];
 
 if (array_key_exists($controller, $controllerMap)) {

@@ -88,6 +88,13 @@ $action = $_GET['action'] ?? 'index';
 </li>
 <?php endif; ?>
 
+<li class="nav-item">
+    <a class="nav-link <?php echo $current_page == 'report' ? 'active' : ''; ?>" 
+       href="index.php?controller=report&action=index">
+        <i class="bi bi-file-text"></i> Reports
+    </a>
+</li>
+
 
             
             <li class="nav-item">

@@ -162,34 +162,36 @@ if (!class_exists('OfficeTypeController')) {
             }
         }
 
-        // Delete office type (soft delete)
-        public function delete() {
-            $id = $_GET['id'] ?? 0;
-            
-            $officeType = new OfficeType();
-            $type = $officeType->getTypeById($id);
-            
-            if($officeType->delete($id)) {
-                // Log activity
-                $this->activityLog->log(
-                    $_SESSION['user_id'],
-                    $_SESSION['user_username'],
-                    'DEACTIVATE_OFFICE_TYPE',
-                    'Deactivated office type: ' . $type['type_name'],
-                    'OfficeTypeController',
-                    'delete',
-                    ['id' => $id, 'type_name' => $type['type_name']],
-                    ['status' => 0],
-                    'success'
-                );
-                
-                $_SESSION['success'] = 'Office type deactivated successfully';
-            } else {
-                $_SESSION['error'] = 'Failed to deactivate office type';
-            }
-            
-            $this->redirect('index.php?controller=officetype&action=index');
-        }
+        // Delete office type (permanent delete)
+public function delete() {
+    $id = $_GET['id'] ?? 0;
+    
+    $officeType = new OfficeType();
+    $type = $officeType->getTypeById($id);
+    
+    $result = $officeType->delete($id);
+    
+    if($result['success']) {
+        // Log activity
+        $this->activityLog->log(
+            $_SESSION['user_id'],
+            $_SESSION['user_username'],
+            'DELETE_OFFICE_TYPE',
+            'Permanently deleted office type: ' . $type['type_name'],
+            'OfficeTypeController',
+            'delete',
+            ['id' => $id, 'type_name' => $type['type_name']],
+            null,
+            'success'
+        );
+        
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
+    }
+    
+    $this->redirect('index.php?controller=officetype&action=index');
+}
 
         // Activate office type
         public function activate() {

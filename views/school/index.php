@@ -35,14 +35,6 @@
                 </select>
             </div>
             
-            <div class="col-md-2">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                    <option value="">All Status</option>
-                    <option value="1" <?php echo ($filters['status'] ?? '') == '1' ? 'selected' : ''; ?>>Active</option>
-                    <option value="0" <?php echo ($filters['status'] ?? '') == '0' ? 'selected' : ''; ?>>Inactive</option>
-                </select>
-            </div>
             
             <div class="col-md-3">
                 <label for="created_by" class="form-label">Created By</label>
@@ -159,22 +151,15 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="index.php?controller=school&action=view&id=<?php echo $school['id']; ?>" 
-                                   class="btn btn-sm btn-info" title="View">View</a>
-                                <a href="index.php?controller=school&action=edit&id=<?php echo $school['id']; ?>" 
-                                   class="btn btn-sm btn-warning" title="Edit">Edit</a>
-                                <?php if($school['status'] == 1): ?>
-                                    <a href="index.php?controller=school&action=delete&id=<?php echo $school['id']; ?>" 
-                                       class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Are you sure you want to deactivate this school/office?')"
-                                       title="Deactivate">Deactivate</a>
-                                <?php else: ?>
-                                    <a href="index.php?controller=school&action=activate&id=<?php echo $school['id']; ?>" 
-                                       class="btn btn-sm btn-success" 
-                                       onclick="return confirm('Are you sure you want to activate this school/office?')"
-                                       title="Activate">Activate</a>
-                                <?php endif; ?>
-                            </td>
+    <a href="index.php?controller=school&action=view&id=<?php echo $school['id']; ?>" 
+       class="btn btn-sm btn-info" title="View">View</a>
+    <a href="index.php?controller=school&action=edit&id=<?php echo $school['id']; ?>" 
+       class="btn btn-sm btn-warning" title="Edit">Edit</a>
+    <a href="index.php?controller=school&action=delete&id=<?php echo $school['id']; ?>" 
+       class="btn btn-sm btn-danger" 
+       onclick="return confirm('WARNING: This will permanently delete this school/office and cannot be undone! Continue?')"
+       title="Delete">Delete</a>
+</td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
